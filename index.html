@@ -274,14 +274,22 @@ function openFeedback(){
   var e=document.getElementById('fbEmail'); if(e) e.value='';
 }
 function closeFeedback(){ document.getElementById('fbMask').classList.remove('show'); }
+function getL(v){ return lang==='zh' ? (v&&v.zh?v.zh:'') : (v&&v.en?v.en:''); }
+var FORMSPREE_ID = 'xjybgrby';
 function sendFeedback(){
   var text=document.getElementById('fbText').value.trim();
   var email=document.getElementById('fbEmail').value.trim();
   if(!text){ alert(lang==='zh'?'请写点什么再提交 ^_^':'Please write something first ^_^'); return; }
-  var subject=encodeURIComponent('[SKU工具] 反馈/建议');
-  var body=encodeURIComponent(text + (email ? '\n\n（来自邮箱: '+email+'）' : '\n\n（匿名）'));
-  window.location.href='mailto:taobaozhou666@gmail.com?subject='+subject+'&body='+body;
-  setTimeout(function(){ closeFeedback(); }, 600);
+  var btn=document.querySelector('.modal-send');
+  if(btn){ btn.disabled=true; btn.textContent= lang==='zh'?'提交中…':'Sending…'; }
+  var payload={ _subject:'[SKU工具] 反馈/建议', message:text, email:(email||'匿名') };
+  fetch('https://formspree.io/f/'+FORMSPREE_ID,{
+    method:'POST', headers:{'Accept':'application/json','Content-Type':'application/json'},
+    body:JSON.stringify(payload)
+  }).then(function(res){ if(res.ok){ return res.json(); } throw new Error(res.statusText); })
+    .then(function(){ alert(lang==='zh'?'✅ 已收到，谢谢你的反馈！':'✅ Got it, thanks for the feedback!'); closeFeedback(); })
+    .catch(function(e){ alert(lang==='zh'?'发送失败，请重试或直接联系管理员。':'Send failed, please retry or contact admin.'); })
+    .finally(function(){ if(btn){ btn.disabled=false; btn.textContent='📧 '+(lang==='zh'?'提交':'Submit'); } });
 }
 
 applyLang();applyTheme();
