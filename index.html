@@ -102,18 +102,19 @@ function doSearch() {
   if (!data.length) { el.results.innerHTML = '<div class="empty">未找到，试试更短的关键词或别的别名</div>'; return; }
   el.results.innerHTML = data.map(it => {
     const isDir = it.type === 'dir';
-    return '<div class="item">'
-      + '<div class="info"><div class="name"><span class="tag ' + it.type + '">' + (isDir?'目录':'文件') + '</span> ' + esc(it.name) + '</div>'
+    const tag = isDir ? 'dir' : 'file';
+    return '<div class="item" data-path="' + escAttr(it.path) + '">'
+      + '<div class="info"><div class="name"><span class="tag ' + tag + '">' + (isDir?'目录':'文件') + '</span> ' + esc(it.name) + '</div>'
       + '<div class="path">' + esc(it.path) + '</div></div>'
       + '<div class="actions">'
-      + '<button class="primary" onclick="copyPath(this,' + quote(it.path) + ')">复制</button>'
-      + '<button onclick="openPath(this,' + quote(it.path) + ')">打开</button>'
+      + '<button class="primary act-copy">复制</button>'
+      + '<button class="act-open">打开</button>'
       + '</div></div>';
   }).join('');
 }
 
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function quote(s) { return JSON.stringify(String(s)); }
+function escAttr(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 // 复制路径：尝试用剪贴板API，失败用 execCommand 兜底
 function copyPath(btn, p) {
@@ -161,6 +162,20 @@ function flash(btn, msg) {
   btn.style.background = '#2ed573';
   setTimeout(() => { btn.textContent = old; btn.style.background = ''; }, 1500);
 }
+
+// 事件委托：点击"复制"/"打开"按钮
+document.getElementById('results').addEventListener('click', function(e) {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  const item = btn.closest('.item');
+  if (!item) return;
+  const path = item.getAttribute('data-path');
+  if (!path) return;
+  if (btn.classList.contains('act-copy')) copyPath(btn, path);
+  else if (btn.classList.contains('act-open')) openPath(btn, path);
+});
+
+window.addEventListener('DOMContentLoaded', function(){ try{ document.getElementById('q').focus(); }catch(e){} });
 </script>
 </body>
 </html>
