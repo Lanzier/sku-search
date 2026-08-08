@@ -1,36 +1,138 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh" data-theme="light" data-lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SKU 路径查询 — 亚马逊共享盘</title>
+<title>SKU 路径查询 · RockBros</title>
 <style>
+/* ===== 主题变量 · RockBros 白绿/黑绿 ===== */
+:root{
+  --brand:#00b368;            /* 主绿(白绿) */
+  --brand-2:#2ecc71;          /* 亮绿 */
+  --brand-deep:#0e2a1e;       /* 黑绿 */
+  --brand-deep-2:#14432e;
+}
+html[data-theme="light"]{
+  --bg1:#f4faf6; --bg2:#e9f5ee;
+  --card:#ffffff; --card-border:rgba(0,179,104,.10);
+  --text:#103a2a; --text-sub:#5b7a6c;
+  --input-bg:#ffffff; --input-border:#d7e9df;
+  --shadow:0 8px 30px rgba(0,90,50,.08);
+  --hover:#f1faf5;
+  --chip:#e6f6ee; --chip-text:#008a52;
+}
+html[data-theme="dark"]{
+  --bg1:#07130d; --bg2:#0b1c13;
+  --card:#10241a; --card-border:rgba(46,204,113,.14);
+  --text:#d8f2e3; --text-sub:#7fa893;
+  --input-bg:#0d1f16; --input-border:#1f4533;
+  --shadow:0 8px 30px rgba(0,0,0,.45);
+  --hover:#152b1f;
+  --chip:#123524; --chip-text:#4ee59a;
+}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,Segoe UI,Microsoft YaHei,sans-serif;background:#f5f6fa;color:#2f3542;padding:18px}
-.container{max-width:900px;margin:0 auto}
-h1{font-size:22px;margin-bottom:4px}
-.sub{color:#747d8c;font-size:13px;margin-bottom:18px}
-.searchbox{display:flex;gap:8px;margin-bottom:10px}
-#q{flex:1;padding:12px 14px;font-size:15px;border:2px solid #dfe4ea;border-radius:8px;outline:none}
-#q:focus{border-color:#3742fa}
-button{padding:11px 18px;font-size:15px;border:none;border-radius:8px;cursor:pointer;background:#3742fa;color:#fff;font-weight:600}
-button:hover{background:#2731d0}
-.stats{color:#747d8c;font-size:12px;margin-bottom:14px;display:flex;justify-content:space-between;flex-wrap:wrap}
-.meta{margin-bottom:10px;color:#57606f;font-size:13px}
-.results{display:flex;flex-direction:column;gap:8px}
-.item{background:#fff;border-radius:8px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.06);display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap}
+html,body{height:100%}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Microsoft YaHei,sans-serif;
+  color:var(--text);
+  background:linear-gradient(150deg,var(--bg1),var(--bg2));
+  background-attachment:fixed;
+  transition:background .4s ease,color .3s ease;
+  min-height:100vh;
+}
+/* 背景装饰 + 品牌色光晕 */
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(600px 300px at 15% -10%,rgba(0,179,104,.14),transparent 70%),
+    radial-gradient(500px 260px at 90% 110%,rgba(20,67,46,.20),transparent 70%);
+}
+
+.page{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:20px}
+
+/* ===== 顶端工具栏 ===== */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:22px;gap:10px;flex-wrap:wrap;
+}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-logo{
+  width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,var(--brand),var(--brand-deep-2));
+  color:#fff;font-size:20px;box-shadow:0 4px 14px rgba(0,179,104,.35);
+}
+.brand-name{font-weight:800;font-size:19px;letter-spacing:.3px;line-height:1.1}
+.brand-sub{font-size:11px;color:var(--text-sub);font-weight:500}
+.controls{display:flex;gap:8px;align-items:center}
+.toggle{
+  display:flex;align-items:center;gap:7px;border:1px solid var(--input-border);
+  background:var(--card);color:var(--text);padding:7px 13px;border-radius:10px;
+  font-size:13px;cursor:pointer;transition:all .25s ease;font-weight:600;
+}
+.toggle:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
+.toggle:active{transform:scale(.95)}
+.lang-switch{background:linear-gradient(135deg,var(--brand),var(--brand-deep-2));color:#fff;border:none}
+.lang-switch:hover{opacity:.9}
+.lang-switch .muted{opacity:.55;font-weight:400}
+
+/* ===== 主标题 ===== */
+.hero{text-align:center;margin-bottom:20px}
+.hero h1{font-size:28px;font-weight:800;background:linear-gradient(120deg,var(--brand),var(--brand-2),var(--brand-deep-2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.5px}
+.hero .sub{color:var(--text-sub);font-size:13.5px;margin-top:6px;font-weight:500}
+
+/* ===== 搜索 ===== */
+.searchbox{display:flex;gap:10px;margin:0 auto 12px;max-width:640px}
+#q{
+  flex:1;padding:14px 18px;font-size:15px;color:var(--text);
+  background:var(--input-bg);border:2px solid var(--input-border);border-radius:14px;outline:none;
+  transition:border-color .25s ease,box-shadow .25s ease;
+  box-shadow:var(--shadow);
+}
+#q::placeholder{color:var(--text-sub);opacity:.7}
+#q:focus{border-color:var(--brand);box-shadow:0 0 0 4px rgba(0,179,104,.15)}
+button.search-btn{
+  padding:12px 26px;font-size:15px;border:none;border-radius:14px;cursor:pointer;
+  background:linear-gradient(135deg,var(--brand),var(--brand-deep-2));color:#fff;font-weight:700;
+  transition:transform .15s ease,box-shadow .25s ease;box-shadow:0 6px 18px rgba(0,150,86,.3);
+}
+button.search-btn:hover{transform:translateY(-1px)}
+button.search-btn:active{transform:scale(.96)}
+.quick{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:16px}
+.chip{
+  font-size:12px;color:var(--chip-text);background:var(--chip);border:none;padding:5px 12px;border-radius:20px;
+  cursor:pointer;transition:all .2s ease;font-weight:600;
+}
+.chip:hover{transform:translateY(-1px);box-shadow:0 2px 8px rgba(0,150,86,.2)}
+
+/* ===== 统计 & 结果 ===== */
+.stats{max-width:640px;margin:0 auto 10px;display:flex;justify-content:space-between;color:var(--text-sub);font-size:12px;flex-wrap:wrap;gap:4px}
+.meta{margin-bottom:12px;color:var(--text-sub);font-size:13px;font-weight:600}
+.results{display:flex;flex-direction:column;gap:9px}
+
+.item{
+  background:var(--card);border:1px solid var(--card-border);border-radius:14px;
+  padding:13px 16px;display:flex;align-items:center;gap:12px;justify-content:space-between;flex-wrap:wrap;
+  box-shadow:var(--shadow);transition:transform .18s ease,box-shadow .25s ease,background .3s ease;
+}
+.item:hover{transform:translateY(-2px);box-shadow:0 12px 34px rgba(0,90,50,.10);background:var(--hover)}
 .item .info{flex:1;min-width:200px}
-.item .name{font-weight:600;font-size:14px;word-break:break-all}
-.item .path{font-size:12px;color:#747d8c;word-break:break-all;margin-top:3px;font-family:Consolas,monospace}
-.tag{font-size:11px;padding:2px 8px;border-radius:10px;color:#fff;flex-shrink:0}
-.tag.dir{background:#353b48}
-.tag.file{background:#2ed573}
-.actions{display:flex;gap:6px;flex-shrink:0}
-.actions button{background:#dfe4ea;color:#2f3542;padding:7px 10px;font-size:12px;border-radius:6px;position:relative;overflow:hidden;transition:background .25s ease,transform .15s ease,box-shadow .25s ease;min-width:56px}
+.item .name{font-weight:600;font-size:14px;word-break:break-all;display:flex;align-items:center;gap:8px}
+.item .path{font-size:12px;color:var(--text-sub);word-break:break-all;margin-top:3px;font-family:Consolas,Menlo,monospace}
+.tag{font-size:11px;padding:2px 9px;border-radius:10px;color:#fff;flex-shrink:0;font-weight:600}
+.tag.dir{background:linear-gradient(135deg,var(--brand-deep),var(--brand-deep-2))}
+.tag.file{background:linear-gradient(135deg,var(--brand),var(--brand-2))}
+.actions{display:flex;gap:7px;flex-shrink:0}
+.actions button{
+  background:var(--chip);color:var(--chip-text);padding:7px 13px;font-size:12.5px;border-radius:9px;border:none;
+  cursor:pointer;font-weight:600;position:relative;overflow:hidden;min-width:64px;
+  transition:background .25s ease,transform .15s ease,box-shadow .25s ease;color:var(--text);
+}
+.actions button.primary{background:var(--brand);color:#fff}
+html[data-theme="dark"] .actions button.primary{background:var(--brand-deep-2);color:#fff}
 .actions button:active{transform:scale(.94)}
-.actions button.primary{background:#3742fa;color:#fff}
-.actions button.state-done{background:#2ed573!important;color:#fff!important;box-shadow:0 2px 8px rgba(46,204,113,.4)}
-.actions button.state-busy{background:#3742fa!important;color:#fff!important;box-shadow:0 2px 8px rgba(55,66,250,.35)}
+.actions button.state-done{background:var(--brand-2)!important;color:#fff!important;box-shadow:0 2px 10px rgba(46,204,113,.45)}
+.actions button.state-busy{background:var(--brand-deep-2)!important;color:#fff!important;box-shadow:0 2px 10px rgba(20,67,46,.45)}
+html[data-theme="light"] .actions button.state-busy{background:var(--brand)!important}
 .actions button.state-err{background:#e74c3c!important;color:#fff!important}
 .actions button .btntext{display:inline-block;transition:opacity .18s ease,transform .18s ease}
 .actions button.fade-out .btntext{opacity:0;transform:translateY(4px)}
@@ -39,32 +141,85 @@ button:hover{background:#2731d0}
 .actions button.pulse-pop{animation:pulsePop .4s ease}
 @keyframes spin{to{transform:rotate(360deg)}}
 .spinner{display:inline-block;width:10px;height:10px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-1px;margin-right:4px}
-.empty{background:#fff;border-radius:8px;padding:30px;text-align:center;color:#a4b0be}
-.tip{font-size:12px;color:#a4b0be;margin-top:8px;background:#fff;border-radius:6px;padding:10px 12px}
-.tip b{color:#57606f}
-@media(max-width:600px){.item{flex-direction:column;align-items:flex-start}.actions{width:100%}.actions button{flex:1;padding:10px;min-width:0}}
+
+.empty{padding:40px 20px;text-align:center;color:var(--text-sub);background:var(--card);border-radius:14px;border:1px dashed var(--card-border)}
+.tip{font-size:12px;color:var(--text-sub);margin-top:16px;background:var(--card);border-radius:12px;padding:12px 14px;border:1px solid var(--card-border);box-shadow:var(--shadow);line-height:1.7}
+.tip b{color:var(--brand)}
+
+.footer{text-align:center;margin-top:26px;padding-top:16px;border-top:1px solid var(--card-border);color:var(--text-sub);font-size:11.5px}
+.footer .brandmark{color:var(--brand);font-weight:700}
+
+@media(max-width:600px){
+  .page{padding:14px}
+  .hero h1{font-size:23px}
+  .item{flex-direction:column;align-items:flex-start}
+  .actions{width:100%}
+  .actions button{flex:1;min-width:0;padding:10px}
+  .topbar{align-items:flex-start}
+}
+/* 切换平滑 */
+html{transition:background .4s ease}
 </style>
 </head>
 <body>
-<div class="container">
-<h1>🔍 SKU 路径查询</h1>
-<div class="sub">亚马逊共享盘 · 输入 SKU / 编号 / 别名 / 关键词</div>
-<div class="searchbox">
-  <input id="q" placeholder="例如：3012 / RHL1000 / 头盔" autofocus>
-  <button onclick="doSearch()">搜索</button>
+<div class="page">
+
+  <!-- 顶端工具栏：品牌 + 中英/日夜切换 -->
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-logo">🏁</div>
+      <div>
+        <div class="brand-name">RockBros <span class="lang" data-zh="SKU 路径查询" data-en="SKU Search">SKU 路径查询</span></div>
+        <div class="brand-sub lang" data-zh="亚马逊共享盘 · 快速定位文件路径" data-en="Amazon shared drive · Locate files fast">亚马逊共享盘 · 快速定位文件路径</div>
+      </div>
+    </div>
+    <div class="controls">
+      <button class="toggle" id="themeBtn" title="切换日间/夜间模式">
+        <span id="themeIcon">🌙</span><span class="lang" data-zh="深色" data-en="Dark">深色</span>
+      </button>
+      <button class="toggle lang-switch" id="langBtn">
+        <span id="langLabel">English</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 主标题 -->
+  <div class="hero">
+    <h1 class="lang" data-zh="🔍 SKU 路径查询" data-en="🔍 SKU Path Search">🔍 SKU 路径查询</h1>
+    <div class="sub lang" data-zh="输入 SKU / 编号 / 别名 / 关键词，关联结果一键定位" data-en="Enter SKU / code / alias / keyword to locate related folders">输入 SKU / 编号 / 别名 / 关键词，关联结果一键定位</div>
+  </div>
+
+  <!-- 搜索 -->
+  <div class="searchbox">
+    <input id="q" class="lang" data-zh="例如：3012 / RHL1000 / 头盔" data-en="e.g. 3012 / RHL1000 / helmet" placeholder="例如：3012 / RHL1000 / 头盔" autofocus>
+    <button class="search-btn" onclick="doSearch()"><span class="lang" data-zh="搜索" data-en="Search">搜索</span></button>
+  </div>
+  <div class="quick">
+    <button class="chip" onclick="setQ('3012')">3012</button>
+    <button class="chip" onclick="setQ('RHL1000')">RHL1000</button>
+    <button class="chip" onclick="setQ('170035')">170035</button>
+    <button class="chip lang" onclick="setQ('头盔')" data-zh="头盔" data-en="Helmet">头盔</button>
+  </div>
+
+  <!-- 统计 & 结果 -->
+  <div class="stats">
+    <span id="count"></span>
+    <span id="built"></span>
+  </div>
+  <div class="meta" id="meta"></div>
+  <div class="results" id="results"></div>
+
+  <!-- 使用说明 -->
+  <div class="tip">
+    <b class="lang" data-zh="💡 使用说明" data-en="💡 How to use">💡 使用说明</b>
+    <span class="lang" data-zh="：支持 SKU 前缀匹配（搜 3012 → 列出 30120141、30120128 等全部关联 SKU 文件夹）。点击「复制」复制 UNC 路径；点击「打开」在电脑上打开文件夹（首次需安装打开脚本）。" data-en=": Supports SKU prefix matching (search 3012 → lists 30120141, 30120128, etc.). Click Copy to copy UNC path; click Open to open the folder (install opener once on first use).">：支持 SKU 前缀匹配（搜 3012 → 列出 30120141、30120128 等全部关联 SKU 文件夹）。点击「复制」复制 UNC 路径；点击「打开」在电脑上打开文件夹（首次需安装打开脚本）。</span>
+  </div>
+
+  <div class="footer">
+    <span class="brandmark">RockBros®</span> · <span class="lang" data-zh="亚马逊共享盘 SKU 查询工具" data-en="Amazon shared drive SKU search tool">亚马逊共享盘 SKU 查询工具</span>
+  </div>
 </div>
-<div class="stats">
-  <span id="count"></span>
-  <span id="built"></span>
-</div>
-<div class="meta" id="meta"></div>
-<div class="results" id="results"></div>
-<div class="tip">
-  <b>使用说明：</b>支持 SKU 前缀匹配（搜 3012 → 列出 30120141、30120128 等全部关联 SKU 文件夹）。
-  点击「复制」复制 UNC 路径。点击「打开」需要在电脑上安装一次打开脚本
-  （本页会在首次点击打开时自动引导安装，或联系管理员获取安装包）。
-</div>
-</div>
+
 <script>
 let INDEX = null;
 const el = {
@@ -75,17 +230,70 @@ const el = {
   results: document.getElementById('results'),
 };
 el.q.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+function setQ(v){ el.q.value = v; doSearch(); }
 
-// 加载索引（从同目录 index.json）
+/* ===== 主题（日/夜） ===== */
+const themeBtn = document.getElementById('themeBtn');
+const themeIcon = document.getElementById('themeIcon');
+const savedTheme = localStorage.getItem('sku_theme');
+if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
+function applyThemeIcon(){
+  const t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+  themeIcon.textContent = t === 'dark' ? '☀️' : '🌙';
+  // 切换按钮文字
+  const spans = themeBtn.querySelectorAll('.lang');
+  spans.forEach(s => { if (s.getAttribute('data-zh') === '深色' || s.getAttribute('data-en') === 'Dark') { s.dataset.zh = (t==='dark'?'浅色':'深色'); s.dataset.en = (t==='dark'?'Light':'Dark'); } });
+}
+themeBtn.addEventListener('click', () => {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('sku_theme', next);
+  applyThemeIcon();
+  applyLang(); // 刷新语言文本（按钮文案变了）
+});
+applyThemeIcon();
+
+/* ===== 语言（中/英） ===== */
+const langBtn = document.getElementById('langBtn');
+const savedLang = localStorage.getItem('sku_lang') || 'zh';
+document.documentElement.setAttribute('data-lang', savedLang);
+function applyLang(){
+  const lang = document.documentElement.getAttribute('data-lang');
+  document.documentElement.setAttribute('lang', lang);
+  document.documentElement.style.colorScheme = document.documentElement.getAttribute('data-theme');
+  document.querySelectorAll('.lang').forEach(el0 => {
+    const key = lang === 'zh' ? 'data-zh' : 'data-en';
+    const val = el0.getAttribute(key);
+    if (val != null && val !== '') { el0.textContent = val; }
+  });
+  // 按钮自身文字：语言切换按钮显示"另一种语言名"
+  const langLabel = lang === 'zh' ? 'English' : '中文';
+  langBtn.innerHTML = langLabel;
+  // 占位符
+  const ph = lang === 'zh' ? '例如：3012 / RHL1000 / 头盔' : 'e.g. 3012 / RHL1000 / helmet';
+  el.q.setAttribute('placeholder', ph);
+}
+langBtn.addEventListener('click', () => {
+  const cur = document.documentElement.getAttribute('data-lang');
+  const next = cur === 'zh' ? 'en' : 'zh';
+  document.documentElement.setAttribute('data-lang', next);
+  localStorage.setItem('sku_lang', next);
+  applyLang();
+});
+
+/* ===== 索引加载 ===== */
 fetch('./index.json')
   .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
   .then(d => {
     INDEX = d;
     const total = (d.dirs ? d.dirs.length : 0) + (d.files ? d.files.length : 0);
-    el.count.textContent = '已收录 ' + total + ' 条SKU/文件夹';
-    if (d.builtAt) el.built.textContent = '索引更新于 ' + d.builtAt.slice(0, 10);
+    const l = document.documentElement.getAttribute('data-lang');
+    el.count.textContent = l === 'zh' ? ('已收录 ' + total + ' 条SKU/文件夹') : (total + ' SKU items indexed');
+    if (d.builtAt) el.built.textContent = (l === 'zh' ? '索引更新于 ' : 'Updated ') + d.builtAt.slice(0, 10);
     document.title = 'SKU 路径查询 (' + total + ')';
     el.q.focus();
+    applyLang();
   })
   .catch(err => {
     INDEX = null;
@@ -93,9 +301,11 @@ fetch('./index.json')
     el.meta.textContent = '请确认 index.json 已发布。错误: ' + err.message;
   });
 
+/* ===== 搜索 ===== */
 function doSearch() {
   const q = el.q.value.trim();
-  if (!INDEX) { el.meta.textContent = '索引未加载，请稍候'; return; }
+  const l = document.documentElement.getAttribute('data-lang');
+  if (!INDEX) { el.meta.textContent = l === 'zh' ? '索引未加载，请稍候' : 'Index loading, please wait'; return; }
   if (!q) { el.results.innerHTML = ''; el.meta.textContent = ''; return; }
   const needle = q.toUpperCase();
   const all = [];
@@ -109,17 +319,21 @@ function doSearch() {
     else if (n.includes(needle)) contain.push(e);
   }
   const data = [...exact.slice(0,30), ...prefix.slice(0,60), ...contain.slice(0,60)];
-  el.meta.textContent = '找到 ' + data.length + ' 条' + (data.length >= data.length_cap?'':'');
-  if (!data.length) { el.results.innerHTML = '<div class="empty">未找到，试试更短的关键词或别的别名</div>'; return; }
+  el.meta.textContent = (l === 'zh' ? '找到 ' : 'Found ') + data.length + (l === 'zh' ? ' 条' : ' results');
+  if (!data.length) { el.results.innerHTML = '<div class="empty">' + (l === 'zh' ? '未找到，试试更短的关键词或别的别名' : 'No results. Try a shorter keyword or different alias') + '</div>'; return; }
   el.results.innerHTML = data.map(it => {
     const isDir = it.type === 'dir';
     const tag = isDir ? 'dir' : 'file';
+    const dirLabel = l === 'zh' ? '目录' : 'Dir';
+    const fileLabel = l === 'zh' ? '文件' : 'File';
+    const copyLabel = l === 'zh' ? '复制' : 'Copy';
+    const openLabel = l === 'zh' ? '打开' : 'Open';
     return '<div class="item" data-path="' + escAttr(it.path) + '">'
-      + '<div class="info"><div class="name"><span class="tag ' + tag + '">' + (isDir?'目录':'文件') + '</span> ' + esc(it.name) + '</div>'
+      + '<div class="info"><div class="name"><span class="tag ' + tag + '">' + (isDir?dirLabel:fileLabel) + '</span> ' + esc(it.name) + '</div>'
       + '<div class="path">' + esc(it.path) + '</div></div>'
       + '<div class="actions">'
-      + '<button class="primary act-copy"><span class="btntext">复制</span></button>'
-      + '<button class="act-open"><span class="btntext">打开</span></button>'
+      + '<button class="primary act-copy"><span class="btntext">' + copyLabel + '</span></button>'
+      + '<button class="act-open"><span class="btntext">' + openLabel + '</span></button>'
       + '</div></div>';
   }).join('');
 }
@@ -127,53 +341,53 @@ function doSearch() {
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function escAttr(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-// 复制路径：尝试用剪贴板API，失败用 execCommand 兜底
+/* ===== 复制 ===== */
 function copyPath(btn, p) {
+  const l = document.documentElement.getAttribute('data-lang');
+  const doneMsg = l === 'zh' ? '已复制 ✅' : 'Copied ✅';
+  const errMsg = l === 'zh' ? '复制失败' : 'Copy failed';
   function fallback() {
     try {
       const ta = document.createElement('textarea');
       ta.value = p; document.body.appendChild(ta); ta.select();
       document.execCommand('copy'); document.body.removeChild(ta);
-      flash(btn, '已复制 ✅', 'done');
-    } catch (e) { flash(btn, '复制失败', 'err', 2500); }
+      flash(btn, doneMsg, 'done');
+    } catch (e) { flash(btn, errMsg, 'err', 2500); }
   }
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(p).then(() => flash(btn, '已复制 ✅', 'done')).catch(fallback);
+    navigator.clipboard.writeText(p).then(() => flash(btn, doneMsg, 'done')).catch(fallback);
   } else fallback();
 }
 
-// 打开路径：通过 sku-open:// 自定义协议唤起本地脚本
+/* ===== 打开（三态时序） ===== */
 function openPath(btn, p) {
-  // Windows/IPC 路径转协议 URL
+  const l = document.documentElement.getAttribute('data-lang');
+  const busyMsg = l === 'zh' ? '正在打开…' : 'Opening…';
+  const doneMsg = l === 'zh' ? '已打开 ✅' : 'Opened ✅';
   const protoUrl = 'sku-open://open?path=' + encodeURIComponent(p);
   try {
     const iframe = document.createElement('iframe');
     iframe.style.display = 'none';
     iframe.src = protoUrl;
     document.body.appendChild(iframe);
-    // 三态时序：正在打开…(蓝/spinner) → 已打开 ✅(绿) → 恢复「打开」
-    flash(btn, '正在打开…', 'busy', 0);           // 1. busy，不自动恢复
-    setTimeout(() => flash(btn, '已打开 ✅', 'done', 0), 1300);  // 2. 1.3s后切绿
-    setTimeout(() => flash(btn, null, '', 0), 2900);            // 3. 再1.6s后恢复「打开」
+    flash(btn, busyMsg, 'busy', 0);
+    setTimeout(() => flash(btn, doneMsg, 'done', 0), 1300);
+    setTimeout(() => flash(btn, null, '', 0), 2900);
     iframe.addEventListener('load', () => setTimeout(() => document.body.removeChild(iframe), 2000));
-    // 尝试检测是否已安装（通过一个时间窗口，简化：直接提示）
     setTimeout(() => {
       if (!window.__skuOpenInstalled) {
-        // 提示安装（只提示一次）
         if (!window.__skuOpenAsked) {
           window.__skuOpenAsked = true;
-          if (confirm('正在尝试打开文件。如果没反应，说明还没安装打开脚本。\n\n需要现在安装打开脚本吗？（仅需安装一次）')) {
-            window.location.href = './sku-open-installer-v2.zip';
-          }
+          const msg = l === 'zh' ? '正在尝试打开文件。如果没反应，说明还没安装打开脚本。\n\n需要现在安装打开脚本吗？（仅需安装一次）' : 'Trying to open. If nothing happens, the opener is not installed.\n\nInstall the opener now? (one time only)';
+          if (confirm(msg)) window.location.href = './sku-open-installer-v2.zip';
         }
       }
     }, 1500);
-  } catch (e) { alert('打开失败：' + e.message); }
+  } catch (e) { alert('打开失败: ' + e.message); }
 }
 
+/* ===== 按钮状态动画 ===== */
 function flash(btn, msg, state, duration) {
-  // state: 'done'(绿) | 'busy'(蓝, 带spinner) | 'err'(红) | null(恢复原文)
-  // duration>0: 到时自动恢复 | 0/负: 不自动恢复(外部接手)
   duration = (duration == null) ? 1500 : duration;
   const textEl = btn.querySelector('.btntext');
   const setState = () => {
@@ -194,7 +408,8 @@ function flash(btn, msg, state, duration) {
     }, 180);
   };
   const restore = () => {
-    const orig = btn.classList.contains('act-copy') ? '复制' : '打开';
+    const l = document.documentElement.getAttribute('data-lang');
+    const orig = btn.classList.contains('act-copy') ? (l === 'zh'?'复制':'Copy') : (l === 'zh'?'打开':'Open');
     btn.classList.add('fade-out');
     setTimeout(() => {
       textEl.textContent = orig;
@@ -204,20 +419,13 @@ function flash(btn, msg, state, duration) {
       btn.classList.remove('state-done','state-busy','state-err','pulse-pop');
     }, 180);
   };
-
-  if (msg === null) { restore(); return; }  // 手动恢复
-  if (state === 'busy') {
-    setState();
-    changeText('<span class="spinner"></span>' + msg);
-  } else if (state === 'done' || state === 'err') {
-    setState();
-    changeText(msg);
-  }
-  // 自动恢复（仅当 duration>0）
+  if (msg === null) { restore(); return; }
+  if (state === 'busy') { setState(); changeText('<span class="spinner"></span>' + msg); }
+  else if (state === 'done' || state === 'err') { setState(); changeText(msg); }
   if (duration > 0) setTimeout(restore, duration);
 }
 
-// 事件委托：点击"复制"/"打开"按钮
+/* ===== 事件委托 ===== */
 document.getElementById('results').addEventListener('click', function(e) {
   const btn = e.target.closest('button');
   if (!btn) return;
@@ -229,7 +437,9 @@ document.getElementById('results').addEventListener('click', function(e) {
   else if (btn.classList.contains('act-open')) openPath(btn, path);
 });
 
-window.addEventListener('DOMContentLoaded', function(){ try{ document.getElementById('q').focus(); }catch(e){} });
+/* 初始应用语言 + 主题图标 */
+applyLang();
+applyThemeIcon();
 </script>
 </body>
 </html>
