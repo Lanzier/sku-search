@@ -3,321 +3,259 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ROCKBROS · SKU Search</title>
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+<title>SKU 路径查询</title>
 <style>
-/* ===== RockBros 官方风格：黑白极简 + 绿点缀 · 参考 rockbrosbike.us ===== */
-:root{
-  --green:#2f8737;      /* 官网 CTA 绿 */
-  --green-2:#43a047;    /* hover 亮绿 */
-  --yellow:#fdbc00;     /* 官网评价星标黄 */
-}
+/* ===== iOS 26 液态玻璃 + 纯黑白 ===== */
 html[data-theme="light"]{
-  --bg:#ffffff; --bg-soft:#f6f7f8;
-  --card:#ffffff; --card-border:#eeeeee;
-  --text:#111617; --text-sub:#5b6568; --text-faint:#9aa3a7;
-  --line:#e6e8e9;
-  --hover:#fafbfb;
-  --green-dim:#e8f4e9;
-  --header-bg:rgba(255,255,255,.92);
+  --bg:#f5f5f7;
+  --text:#1d1d1f;
+  --text-sub:#6e6e73;
+  --text-faint:#a1a1a6;
+  --glass:rgba(255,255,255,.62);
+  --glass-strong:rgba(255,255,255,.78);
+  --glass-border:rgba(255,255,255,.85);
+  --glass-hi:inset 0 1px 1px rgba(255,255,255,.9), inset 0 -1px 1px rgba(255,255,255,.25);
+  --glass-shadow:0 12px 40px rgba(0,0,0,.10), 0 2px 8px rgba(0,0,0,.06);
+  --glow1:rgba(202,205,214,.4);
+  --glow2:rgba(226,226,232,.5);
+  --glow3:rgba(212,212,220,.35);
+  --primary:#000000;
+  --on-primary:#ffffff;
+  --input-border:rgba(0,0,0,.10);
 }
 html[data-theme="dark"]{
-  --bg:#111617; --bg-soft:#0c0f10;
-  --card:#1a1e20; --card-border:#2a3033;
-  --text:#ffffff; --text-sub:#9fb0b4; --text-faint:#5b666a;
-  --line:#2a3033;
-  --hover:#202527;
-  --green-dim:#16301b;
-  --header-bg:rgba(17,22,23,.92);
+  --bg:#000000;
+  --text:#f5f5f7;
+  --text-sub:#86868b;
+  --text-faint:#48484d;
+  --glass:rgba(28,28,30,.55);
+  --glass-strong:rgba(28,28,30,.75);
+  --glass-border:rgba(255,255,255,.12);
+  --glass-hi:inset 0 1px 1px rgba(255,255,255,.16), inset 0 -1px 1px rgba(255,255,255,.05);
+  --glass-shadow:0 12px 40px rgba(0,0,0,.55), 0 2px 8px rgba(0,0,0,.4);
+  --glow1:rgba(80,80,90,.35);
+  --glow2:rgba(40,40,48,.4);
+  --glow3:rgba(60,60,70,.3);
+  --primary:#ffffff;
+  --on-primary:#000000;
+  --input-border:rgba(255,255,255,.16);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
 body{
-  font-family:'Roboto',-apple-system,'Segoe UI','Microsoft YaHei',sans-serif;
-  background:var(--bg);color:var(--text);line-height:1.5;
-  transition:background .35s ease,color .25s ease;
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  color:var(--text);background:var(--bg);
   -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+  transition:background .4s ease,color .3s ease;
 }
-a{color:inherit}
-.page{max-width:920px;margin:0 auto;padding:0 20px 40px}
+/* 液态玻璃背景：模糊光斑 */
+.bg-fx{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(600px 400px at 12% 8%, var(--glow1), transparent 65%),
+    radial-gradient(500px 380px at 88% 16%, var(--glow2), transparent 62%),
+    radial-gradient(560px 420px at 50% 95%, var(--glow3), transparent 66%);
+  transition:background .4s ease;
+}
+body::before{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  backdrop-filter:blur(2px);
+}
 
-/* ===== 顶栏（吸顶） ===== */
+/* 顶栏：液态玻璃吸顶 */
 .topbar{
-  position:sticky;top:0;z-index:100;
-  display:flex;align-items:center;justify-content:space-between;
-  padding:14px 0;margin-bottom:26px;
-  background:var(--header-bg);
-  backdrop-filter:blur(8px);
-  border-bottom:1px solid var(--line);
+  position:sticky;top:0;z-index:100;width:100%;
+  padding:16px 28px;display:flex;align-items:center;justify-content:space-between;
+  background:var(--glass);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);
+  border-bottom:1px solid var(--glass-border);
 }
-.brand{display:flex;align-items:center;gap:12px;text-decoration:none}
-.brand-mark{
-  width:34px;height:34px;display:flex;align-items:center;justify-content:center;
-  border-radius:8px;background:var(--text);color:var(--bg);
-}
-.brand-mark svg{width:18px;height:18px}
-.brand-text{
-  font-size:21px;font-weight:900;letter-spacing:-.02em;
-  color:var(--text);line-height:1;
-}
-.brand-text small{display:block;font-size:9.5px;font-weight:500;letter-spacing:.32em;color:var(--text-sub);margin-top:2px}
-.controls{display:flex;gap:6px;align-items:center}
+.topbar-title{font-size:17px;font-weight:600;letter-spacing:-.01em}
+.controls{display:flex;gap:8px}
 .ctl{
-  display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:6px;
-  border:1px solid var(--line);background:transparent;color:var(--text);
-  font-size:13px;font-weight:500;cursor:pointer;transition:all .18s ease;font-family:inherit;
+  display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;
+  background:var(--glass-strong);color:var(--text);border:1px solid var(--glass-border);
+  box-shadow:var(--glass-hi),0 2px 8px rgba(0,0,0,.05);
+  font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .2s ease;
+  backdrop-filter:blur(10px);
 }
-.ctl:hover{background:var(--hover);border-color:var(--text-sub)}
-.ctl:active{transform:scale(.95)}
-.ctl .ico{font-size:14px;line-height:1}
+.ctl:hover{transform:translateY(-1px)}
+.ctl:active{transform:scale(.96)}
 
-/* ===== Hero 标题 ===== */
-.hero{text-align:center;margin-bottom:26px}
-.hero h1{font-size:30px;font-weight:900;letter-spacing:-.03em;color:var(--text)}
-.hero .sub{font-size:14px;color:var(--text-sub);margin-top:8px}
+/* 主体：全宽推满 */
+.main{position:relative;z-index:1;width:100%;padding:36px 28px 60px;max-width:none}
 
-/* ===== 搜索框 ===== */
-.searchbox{display:flex;gap:0;max-width:620px;margin:0 auto 14px;box-shadow:0 2px 14px rgba(0,0,0,.06)}
-#q{
-  flex:1;padding:15px 20px;font-size:15px;color:var(--text);
-  background:var(--card);border:1px solid var(--line);border-right:none;
-  border-radius:8px 0 0 8px;outline:none;font-family:inherit;transition:border-color .2s;
+.hero{text-align:center;margin-bottom:32px}
+.hero h1{font-size:42px;font-weight:700;letter-spacing:-.03em}
+.hero .sub{font-size:15px;color:var(--text-sub);margin-top:10px}
+
+/* 搜索：液态玻璃浮层 */
+.search-wrap{max-width:560px;margin:0 auto 30px}
+.searchbox{
+  display:flex;align-items:center;padding:6px;border-radius:18px;
+  background:var(--glass);backdrop-filter:blur(24px) saturate(160%);-webkit-backdrop-filter:blur(24px) saturate(160%);
+  border:1px solid var(--glass-border);box-shadow:var(--glass-hi),var(--glass-shadow);
 }
+#q{flex:1;padding:14px 18px;font-size:16px;color:var(--text);background:transparent;border:none;outline:none;font-family:inherit}
 #q::placeholder{color:var(--text-sub)}
-#q:focus{border-color:var(--green)}
 button.search-btn{
-  padding:0 30px;font-size:15px;font-weight:700;border:none;cursor:pointer;
-  background:var(--green);color:#fff;border-radius:0 8px 8px 0;
-  transition:background .2s ease;font-family:inherit;
+  padding:12px 24px;border:none;border-radius:12px;cursor:pointer;font-size:15px;font-weight:600;
+  background:linear-gradient(180deg,rgba(0,0,0,.82),rgba(0,0,0,.92));color:#fff;
+  transition:transform .15s ease,opacity .2s;font-family:inherit;
 }
-button.search-btn:hover{background:var(--green-2)}
-button.search-btn:active{transform:scale(.98)}
-.quick{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:20px}
-.chip{
-  font-size:12.5px;color:var(--text-sub);background:transparent;border:1px solid var(--line);
-  padding:5px 14px;border-radius:20px;cursor:pointer;transition:all .18s ease;font-family:inherit;
-}
-.chip:hover{color:var(--green);border-color:var(--green);background:var(--green-dim)}
+html[data-theme="dark"] button.search-btn{background:linear-gradient(180deg,#fff,#e8e8ed);color:#000}
+button.search-btn:hover{opacity:.88}
+button.search-btn:active{transform:scale(.95)}
 
-/* ===== 结果 ===== */
-.stats{max-width:620px;margin:0 auto 8px;display:flex;justify-content:space-between;color:var(--text-faint);font-size:12px;flex-wrap:wrap;gap:4px}
+.quick{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:24px}
+.chip{
+  font-size:13px;color:var(--text-sub);background:var(--glass);border:1px solid var(--glass-border);
+  padding:6px 16px;border-radius:999px;cursor:pointer;font-family:inherit;transition:all .18s ease;
+  backdrop-filter:blur(10px);box-shadow:var(--glass-hi);
+}
+.chip:hover{color:var(--text);transform:translateY(-1px)}
+
+/* 结果：玻璃卡片网格 · 全宽 */
+.stats{max-width:1100px;margin:0 auto 10px;display:flex;justify-content:space-between;color:var(--text-faint);font-size:12px}
 .meta{margin-bottom:12px;color:var(--text-sub);font-size:13px;font-weight:500}
-.results{display:flex;flex-direction:column;gap:8px}
+.results{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));
+  gap:14px;max-width:1300px;margin:0 auto;
+}
 .item{
-  background:var(--card);border:1px solid var(--card-border);border-radius:8px;
-  padding:13px 16px;display:flex;align-items:center;gap:12px;justify-content:space-between;flex-wrap:wrap;
-  transition:border-color .2s ease,box-shadow .2s ease,transform .15s ease;
+  background:var(--glass);backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%);
+  border:1px solid var(--glass-border);box-shadow:var(--glass-hi),var(--glass-shadow);
+  border-radius:20px;padding:18px 20px;display:flex;flex-direction:column;gap:10px;
+  transition:transform .2s ease,box-shadow .25s ease;
 }
-.item:hover{border-color:var(--text-sub);box-shadow:0 2px 10px rgba(0,0,0,.07)}
-.item .info{flex:1;min-width:180px}
-.item .name{font-weight:500;font-size:14px;word-break:break-all;display:flex;align-items:center;gap:8px}
-.item .path{font-size:12px;color:var(--text-sub);word-break:break-all;margin-top:3px;font-family:Consolas,Menlo,monospace}
-.tag{font-size:10.5px;padding:1px 8px;border-radius:3px;font-weight:600;flex-shrink:0;letter-spacing:.02em}
+.item:hover{transform:translateY(-3px);box-shadow:var(--glass-hi),0 18px 50px rgba(0,0,0,.14)}
+.item .info{min-width:0}
+.item .name{font-weight:600;font-size:14.5px;word-break:break-all;display:flex;align-items:center;gap:8px}
+.item .path{font-size:12px;color:var(--text-sub);word-break:break-all;margin-top:5px;font-family:Consolas,Menlo,monospace;line-height:1.4}
+.tag{font-size:10.5px;padding:2px 9px;border-radius:999px;font-weight:600;flex-shrink:0}
 .tag.dir{background:var(--text);color:var(--bg)}
-.tag.file{background:var(--green-dim);color:var(--green)}
-html[data-theme="dark"] .tag.file{color:#6fd07a}
-.actions{display:flex;gap:6px;flex-shrink:0}
+.tag.file{background:rgba(120,120,128,.14);color:var(--text)}
+.actions{display:flex;gap:8px;margin-top:2px}
 .actions button{
-  padding:7px 16px;font-size:13px;font-weight:500;border-radius:6px;border:1px solid var(--line);
-  background:transparent;color:var(--text);cursor:pointer;font-family:inherit;position:relative;overflow:hidden;min-width:76px;
-  transition:all .2s ease;
+  flex:1;padding:10px 14px;font-size:13px;font-weight:600;border-radius:12px;border:1px solid var(--glass-border);
+  background:rgba(255,255,255,.55);color:var(--text);cursor:pointer;font-family:inherit;position:relative;overflow:hidden;
+  transition:all .2s ease;box-shadow:var(--glass-hi);
 }
-.actions button.primary{background:var(--green);border-color:var(--green);color:#fff}
-html[data-theme="dark"] .actions button.primary{color:#fff}
-.actions button.primary:hover{background:var(--green-2)}
-.actions button:not(.primary):hover{border-color:var(--text-sub)}
+html[data-theme="dark"] .actions button{background:rgba(255,255,255,.08)}
+.actions button.primary{background:var(--text);border-color:var(--text);color:var(--bg)}
 .actions button:active{transform:scale(.95)}
-.actions button.state-done{background:var(--green-2);border-color:var(--green-2);color:#fff!important}
-.actions button.state-busy{background:var(--text);border-color:var(--text);color:var(--bg)!important}
-.actions button.state-err{background:#dc2f2f;border-color:#dc2f2f;color:#fff!important}
+.actions button.state-done{background:rgba(52,199,89,.85);border-color:rgba(52,199,89,.85);color:#fff!important}
+.actions button.state-busy{background:rgba(100,100,110,.75);border-color:transparent;color:#fff!important}
+.actions button.state-err{background:rgba(255,69,58,.85);border-color:transparent;color:#fff!important}
 .actions button .btntext{display:inline-block;transition:opacity .18s ease,transform .18s ease}
 .actions button.fade-out .btntext{opacity:0;transform:translateY(4px)}
 .actions button.fade-in .btntext{opacity:1;transform:translateY(0)}
 @keyframes pulsePop{0%{transform:scale(1)}40%{transform:scale(1.1)}100%{transform:scale(1)}}
 .actions button.pulse-pop{animation:pulsePop .4s ease}
 @keyframes spin{to{transform:rotate(360deg)}}
-.spinner{display:inline-block;width:10px;height:10px;border:2px solid rgba(128,128,128,.4);border-top-color:var(--text);border-radius:50%;animation:spin .7s linear infinite;vertical-align:-1px;margin-right:4px}
-html[data-theme="dark"] .spinner{border-color:rgba(255,255,255,.3);border-top-color:#fff}
-.empty{padding:40px 20px;text-align:center;color:var(--text-faint);border:1px dashed var(--line);border-radius:8px;font-size:14px}
+.spinner{display:inline-block;width:11px;height:11px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-1px;margin-right:5px}
+.empty{padding:50px 20px;text-align:center;color:var(--text-faint);font-size:15px}
 
-/* ===== 底部说明 ===== */
-.tip{font-size:12.5px;color:var(--text-sub);margin-top:22px;border-top:1px solid var(--line);padding-top:14px;line-height:1.7}
-.tip b{color:var(--text);font-weight:600}
-.footer{text-align:center;margin-top:26px;color:var(--text-faint);font-size:11.5px;letter-spacing:.02em}
-.footer .rb{font-weight:700;color:var(--text);letter-spacing:.1em}
+.tip{max-width:1100px;margin:28px auto 0;font-size:12.5px;color:var(--text-sub);line-height:1.8;padding:16px 20px;border-radius:16px;background:var(--glass);border:1px solid var(--glass-border);box-shadow:var(--glass-hi)}
+.tip b{color:var(--text)}
+.footer{text-align:center;margin-top:30px;color:var(--text-faint);font-size:11px;letter-spacing:.04em}
 
 @media(max-width:600px){
-  .page{padding:0 14px 30px}
-  .hero h1{font-size:23px}
-  .item{flex-direction:column;align-items:flex-start}
-  .actions{width:100%}
-  .actions button{flex:1;min-width:0;padding:9px}
-  .brand-text{font-size:18px}
+  .main{padding:24px 16px 40px}
+  .hero h1{font-size:30px}
+  .topbar{padding:14px 16px}
+  .results{grid-template-columns:1fr}
 }
 </style>
 </head>
 <body>
-<div class="page">
-
-  <!-- 顶栏：ROCKBROS logo + 中英/日夜切换 -->
-  <div class="topbar">
-    <a class="brand" href="/" title="ROCKBROS">
-      <span class="brand-mark">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M5 17h-2l2-5 3 3h3l4-7-1.5 1.5"/>
-          <circle cx="17" cy="17" r="2.5"/><circle cx="7" cy="17" r="2.5"/>
-          <path d="M9.5 17h5"/>
-        </svg>
-      </span>
-      <span class="brand-text">ROCKBROS<small>GLOBAL · AMAZON</small></span>
-    </a>
-    <div class="controls">
-      <button class="ctl" id="themeBtn" title="Toggle theme">
-        <span class="ico" id="themeIcon">🌙</span><span class="ctl-label" data-zh="深色" data-en="Dark">深色</span>
-      </button>
-      <button class="ctl" id="langBtn" title="语言 / Language"><span id="langLabel">English</span></button>
-    </div>
+<div class="bg-fx"></div>
+<div class="topbar">
+  <div class="topbar-title" data-zh="SKU 路径查询" data-en="SKU Path Search">SKU 路径查询</div>
+  <div class="controls">
+    <button class="ctl" id="themeBtn"><span id="themeIcon">🌙</span><span class="ctl-label" data-zh="深色" data-en="Dark">深色</span></button>
+    <button class="ctl" id="langBtn"><span id="langLabel">English</span></button>
   </div>
+</div>
 
-  <!-- Hero -->
+<div class="main">
   <div class="hero">
-    <h1 data-zh="SKU 路径查询" data-en="SKU Path Search">SKU 路径查询</h1>
-    <div class="sub" data-zh="在亚马逊共享盘中快速定位文件" data-en="Quickly locate files in the Amazon shared drive">在亚马逊共享盘中快速定位文件</div>
+    <h1 data-zh="在共享盘中快速定位文件" data-en="Locate files in the shared drive">在共享盘中快速定位文件</h1>
+    <div class="sub" data-zh="输入 SKU / 编号 / 别名 / 关键词，关联结果一键定位" data-en="Enter SKU / code / alias / keyword to locate related folders">输入 SKU / 编号 / 别名 / 关键词，关联结果一键定位</div>
   </div>
 
-  <!-- 搜索 -->
-  <div class="searchbox">
-    <input id="q" data-zh="输入 SKU / 编号 / 别名 / 关键词，如 3012 或 RHL1000" data-en="Enter SKU / code / alias / keyword, e.g. 3012 or RHL1000" placeholder="输入 SKU / 编号 / 别名 / 关键词，如 3012 或 RHL1000" autofocus>
-    <button class="search-btn" onclick="doSearch()"><span data-zh="搜索" data-en="Search">搜索</span></button>
+  <div class="search-wrap">
+    <div class="searchbox">
+      <input id="q" data-zh="输入 SKU / 编号 / 别名，如 3012 或 RHL1000" data-en="Enter SKU / code / alias, e.g. 3012 or RHL1000" placeholder="输入 SKU / 编号 / 别名，如 3012 或 RHL1000" autofocus>
+      <button class="search-btn" onclick="doSearch()"><span data-zh="搜索" data-en="Search">搜索</span></button>
+    </div>
   </div>
   <div class="quick">
     <button class="chip" onclick="setQ('3012')">3012</button>
     <button class="chip" onclick="setQ('RHL1000')">RHL1000</button>
     <button class="chip" onclick="setQ('170035')">170035</button>
-    <button class="chip" onclick="setQ('头盔',1)"><span data-zh="头盔" data-en="Helmet">头盔</span></button>
+    <button class="chip" onclick="setQ('头盔')"><span data-zh="头盔" data-en="Helmet">头盔</span></button>
   </div>
 
-  <!-- 统计 & 结果 -->
   <div class="stats"><span id="count"></span><span id="built"></span></div>
   <div class="meta" id="meta"></div>
   <div class="results" id="results"></div>
 
   <div class="tip">
-    <b data-zh="使用说明：" data-en="How to use: ">使用说明：</b>
-    <span class="tipbody" data-zh="支持 SKU 前缀匹配（搜 3012 → 列出 30120141、30120128 等全部关联文件夹）。点击「复制」复制 UNC 路径；点击「打开」在电脑上打开文件夹（首次需安装打开脚本）。" data-en="Supports SKU prefix matching (search 3012 lists 30120141, 30120128, etc.). Copy copies the UNC path; Open opens the folder (install the opener once first).">支持 SKU 前缀匹配（搜 3012 → 列出 30120141、30120128 等全部关联文件夹）。点击「复制」复制 UNC 路径；点击「打开」在电脑上打开文件夹（首次需安装打开脚本）。</span>
+    <b data-zh="使用说明： " data-en="How to use: ">使用说明： </b>
+    <span data-zh="支持 SKU 前缀匹配（搜 3012 → 列出 30120141、30120128 等全部关联文件夹）。点击「复制」复制 UNC 路径；点击「打开」在电脑上打开（首次需安装打开脚本）。" data-en="Supports SKU prefix matching (3012 lists 30120141, 30120128, etc.). Copy copies the UNC path; Open opens it (install opener once).">支持 SKU 前缀匹配（搜 3012 → 列出 30120141、30120128 等全部关联文件夹）。点击「复制」复制 UNC 路径；点击「打开」在电脑上打开（首次需安装打开脚本）。</span>
   </div>
-
-  <div class="footer"><span class="rb">ROCKBROS®</span> · <span data-zh="亚马逊共享盘 SKU 查询" data-en="Amazon Shared Drive SKU Search">亚马逊共享盘 SKU 查询</span></div>
+  <div class="footer"><span data-zh="亚马逊共享盘 · SKU 查询工具" data-en="Amazon Shared Drive · SKU Search Tool">亚马逊共享盘 · SKU 查询工具</span></div>
 </div>
 
 <script>
-let INDEX = null;
-let lang = 'zh';
-const el = { q:document.getElementById('q'), count:document.getElementById('count'), built:document.getElementById('built'), meta:document.getElementById('meta'), results:document.getElementById('results') };
-el.q.addEventListener('keydown', e => { if(e.key==='Enter') doSearch(); });
-function setQ(v){ el.q.value = v; doSearch(); }
+let INDEX=null, lang='zh';
+const el={q:document.getElementById('q'),count:document.getElementById('count'),built:document.getElementById('built'),meta:document.getElementById('meta'),results:document.getElementById('results')};
+el.q.addEventListener('keydown',e=>{if(e.key==='Enter')doSearch();});
+function setQ(v){el.q.value=v;doSearch();}
 
-/* ===== 语言 & 主题 ===== */
-const themeBtn=document.getElementById('themeBtn'), themeIcon=document.getElementById('themeIcon');
 function applyLang(){
-  lang = document.documentElement.getAttribute('data-lang') || 'zh';
-  document.documentElement.setAttribute('lang', lang);
-  document.querySelectorAll('[data-zh]').forEach(e=>{
-    const k = lang==='zh' ? 'data-zh' : 'data-en';
-    const v = e.getAttribute(k);
-    if(v!=null && v!=='') e.textContent = v;
-  });
-  document.getElementById('langLabel').textContent = lang==='zh' ? 'EN' : '中文';
-  const ph = lang==='zh' ? '输入 SKU / 编号 / 别名 / 关键词，如 3012 或 RHL1000' : 'Enter SKU / code / alias / keyword, e.g. 3012 or RHL1000';
-  el.q.setAttribute('placeholder', ph);
-  // 刷新统计文字
-  if(INDEX) { const total=(INDEX.dirs?INDEX.dirs.length:0)+(INDEX.files?INDEX.files.length:0); el.count.textContent = lang==='zh'?('已收录 '+total+' 条SKU/文件夹'):(total+' SKU items indexed'); if(INDEX.builtAt) el.built.textContent=(lang==='zh'?'索引更新于 ':'Updated ')+INDEX.builtAt.slice(0,10); }
+  lang=document.documentElement.getAttribute('data-lang')||'zh';
+  document.documentElement.setAttribute('lang',lang);
+  document.querySelectorAll('[data-zh]').forEach(e=>{const k=lang==='zh'?'data-zh':'data-en';const v=e.getAttribute(k);if(v!=null&&v!=='')e.textContent=v;});
+  document.getElementById('langLabel').textContent=lang==='zh'?'EN':'中文';
+  el.q.setAttribute('placeholder',lang==='zh'?'输入 SKU / 编号 / 别名，如 3012 或 RHL1000':'Enter SKU / code / alias, e.g. 3012 or RHL1000');
+  if(INDEX){const t=(INDEX.dirs?INDEX.dirs.length:0)+(INDEX.files?INDEX.files.length:0);el.count.textContent=lang==='zh'?('已收录 '+t+' 条SKU/文件夹'):(t+' SKU items indexed');if(INDEX.builtAt)el.built.textContent=(lang==='zh'?'索引更新于 ':'Updated ')+INDEX.builtAt.slice(0,10);}
 }
 function applyTheme(){
-  const t = document.documentElement.getAttribute('data-theme')==='dark' ? 'dark' : 'light';
-  themeIcon.textContent = t==='dark' ? '☀️' : '🌙';
-  const lbl = themeBtn.querySelector('.ctl-label');
-  if(lbl){ lbl.dataset.zh = t==='dark'?'浅色':'深色'; lbl.dataset.en = t==='dark'?'Light':'Dark'; }
-  if(lang) applyLang();
+  const t=document.documentElement.getAttribute('data-theme')==='dark'?'dark':'light';
+  document.getElementById('themeIcon').textContent=t==='dark'?'☀️':'🌙';
+  const lbl=document.querySelector('#themeBtn .ctl-label');if(lbl){lbl.dataset.zh=t==='dark'?'浅色':'深色';lbl.dataset.en=t==='dark'?'Light':'Dark';if(lang)applyLang();}
 }
-document.getElementById('langBtn').addEventListener('click', ()=>{
-  const n = (document.documentElement.getAttribute('data-lang')||'zh')==='zh' ? 'en' : 'zh';
-  document.documentElement.setAttribute('data-lang', n); localStorage.setItem('sku_lang', n); applyLang();
-});
-themeBtn.addEventListener('click', ()=>{
-  const n = (document.documentElement.getAttribute('data-theme')||'light')==='light' ? 'dark' : 'light';
-  document.documentElement.setAttribute('data-theme', n); localStorage.setItem('sku_theme', n); applyTheme();
-});
-if(localStorage.getItem('sku_theme')) document.documentElement.setAttribute('data-theme', localStorage.getItem('sku_theme'));
-if(localStorage.getItem('sku_lang')) document.documentElement.setAttribute('data-lang', localStorage.getItem('sku_lang'));
+document.getElementById('langBtn').addEventListener('click',()=>{const n=(document.documentElement.getAttribute('data-lang')||'zh')==='zh'?'en':'zh';document.documentElement.setAttribute('data-lang',n);localStorage.setItem('sku_lang',n);applyLang();});
+document.getElementById('themeBtn').addEventListener('click',()=>{const n=(document.documentElement.getAttribute('data-theme')||'light')==='light'?'dark':'light';document.documentElement.setAttribute('data-theme',n);localStorage.setItem('sku_theme',n);applyTheme();});
+if(localStorage.getItem('sku_theme'))document.documentElement.setAttribute('data-theme',localStorage.getItem('sku_theme'));
+if(localStorage.getItem('sku_lang'))document.documentElement.setAttribute('data-lang',localStorage.getItem('sku_lang'));
 
-/* ===== 加载索引 ===== */
-fetch('./index.json')
-  .then(r => { if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
-  .then(d => { INDEX=d; applyLang(); el.q.focus(); })
-  .catch(err => { INDEX=null; el.count.textContent='⚠️ 索引加载失败'; el.meta.textContent='请确认 index.json 已发布。错误: '+err.message; });
+fetch('./index.json').then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}).then(d=>{INDEX=d;applyLang();el.q.focus();}).catch(err=>{INDEX=null;el.count.textContent='⚠️ 索引加载失败';el.meta.textContent='请确认 index.json 已发布。错误: '+err.message;});
 
-/* ===== 搜索 ===== */
 function doSearch(){
-  const q = el.q.value.trim();
-  if(!INDEX){ el.meta.textContent = (lang==='zh'?'索引未加载，请稍候':'Index loading, please wait'); return; }
-  if(!q){ el.results.innerHTML=''; el.meta.textContent=''; return; }
-  const needle = q.toUpperCase(); const all=[];
+  const q=el.q.value.trim();
+  if(!INDEX){el.meta.textContent=lang==='zh'?'索引未加载，请稍候':'Index loading…';return;}
+  if(!q){el.results.innerHTML='';el.meta.textContent='';return;}
+  const needle=q.toUpperCase(),all=[];
   (INDEX.dirs||[]).forEach(d=>all.push({name:d.name,path:d.path,type:'dir'}));
   (INDEX.files||[]).forEach(f=>all.push({name:f.name,path:f.path,type:'file'}));
   const exact=[],prefix=[],contain=[];
-  for(const e of all){ const n=(e.name||'').toUpperCase(); if(n===needle)exact.push(e); else if(n.startsWith(needle))prefix.push(e); else if(n.includes(needle))contain.push(e); }
+  for(const e of all){const n=(e.name||'').toUpperCase();if(n===needle)exact.push(e);else if(n.startsWith(needle))prefix.push(e);else if(n.includes(needle))contain.push(e);}
   const data=[...exact.slice(0,30),...prefix.slice(0,60),...contain.slice(0,60)];
-  el.meta.textContent = (lang==='zh'?'找到 ':'Found ')+data.length+(lang==='zh'?' 条':' results');
-  if(!data.length){ el.results.innerHTML='<div class="empty">'+(lang==='zh'?'未找到，试试更短的关键词或别的别名':'No results. Try a shorter keyword.')+'</div>'; return; }
-  const dl=lang==='zh'?'目录':'Dir', fl=lang==='zh'?'文件':'File', cl=lang==='zh'?'复制':'Copy', ol=lang==='zh'?'打开':'Open';
-  el.results.innerHTML = data.map(it=>{
-    const isDir=it.type==='dir';
-    return '<div class="item" data-path="'+escAttr(it.path)+'">'
-      +'<div class="info"><div class="name"><span class="tag '+(isDir?'dir':'file')+'">'+(isDir?dl:fl)+'</span> '+esc(it.name)+'</div>'
-      +'<div class="path">'+esc(it.path)+'</div></div>'
-      +'<div class="actions">'
-      +'<button class="primary act-copy"><span class="btntext">'+cl+'</span></button>'
-      +'<button class="act-open"><span class="btntext">'+ol+'</span></button>'
-      +'</div></div>';
-  }).join('');
+  el.meta.textContent=(lang==='zh'?'找到 ':'Found ')+data.length+(lang==='zh'?' 条':' results');
+  if(!data.length){el.results.innerHTML='<div class="empty">'+(lang==='zh'?'未找到，试试更短的关键词或别的别名':'No results. Try shorter keyword.')+'</div>';return;}
+  const dl=lang==='zh'?'目录':'Dir',fl=lang==='zh'?'文件':'File',cl=lang==='zh'?'复制':'Copy',ol=lang==='zh'?'打开':'Open';
+  el.results.innerHTML=data.map(it=>{const isDir=it.type==='dir';return '<div class="item" data-path="'+escAttr(it.path)+'"><div class="info"><div class="name"><span class="tag '+(isDir?'dir':'file')+'">'+(isDir?dl:fl)+'</span>'+esc(it.name)+'</div><div class="path">'+esc(it.path)+'</div></div><div class="actions"><button class="primary act-copy"><span class="btntext">'+cl+'</span></button><button class="act-open"><span class="btntext">'+ol+'</span></button></div></div>';}).join('');
 }
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function escAttr(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
-/* ===== 复制 ===== */
-function copyPath(btn,p){
-  const dm=lang==='zh'?'已复制 ✓':'Copied ✓', em=lang==='zh'?'复制失败':'Copied ✓';
-  function fb(){ try{ const ta=document.createElement('textarea'); ta.value=p; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); flash(btn,dm,'done'); }catch(e){ flash(btn,em,'err',2500); } }
-  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(p).then(()=>flash(btn,dm,'done')).catch(fb);
-  else fb();
-}
-/* ===== 打开（三态） ===== */
-function openPath(btn,p){
-  const bm=lang==='zh'?'打开中…':'Opening…', dm=lang==='zh'?'已打开 ✓':'Opened ✓';
-  const pu='sku-open://open?path='+encodeURIComponent(p);
-  try{
-    const iframe=document.createElement('iframe'); iframe.style.display='none'; iframe.src=pu; document.body.appendChild(iframe);
-    flash(btn,bm,'busy',0); setTimeout(()=>flash(btn,dm,'done',0),1300); setTimeout(()=>flash(btn,null,'',0),2900);
-    iframe.addEventListener('load',()=>setTimeout(()=>document.body.removeChild(iframe),2000));
-    setTimeout(()=>{ if(!window.__skuOpenInstalled){ if(!window.__skuOpenAsked){ window.__skuOpenAsked=true; if(confirm(lang==='zh'?'正在尝试打开文件。如果没反应，说明还没安装打开脚本。\n\n需要现在安装打开脚本吗？（仅需安装一次）':'Trying to open... If nothing happens, the opener is not installed. Install now? (once)')) window.location.href='./sku-open-installer-v2.zip'; } } },1500);
-  }catch(e){ alert('打开失败: '+e.message); }
-}
-/* ===== 按钮动画 ===== */
-function flash(btn,msg,state,duration){
-  duration=(duration==null)?1500:duration;
-  const te=btn.querySelector('.btntext');
-  const setState=()=>{ btn.classList.remove('state-done','state-busy','state-err','pulse-pop'); if(state==='done')btn.classList.add('state-done'); else if(state==='busy')btn.classList.add('state-busy'); else if(state==='err')btn.classList.add('state-err'); };
-  const change=(html,cb)=>{ btn.classList.add('fade-out'); setTimeout(()=>{ te.innerHTML=html; btn.classList.remove('fade-out'); btn.classList.add('fade-in'); btn.classList.add('pulse-pop'); setTimeout(()=>btn.classList.remove('fade-in'),250); if(cb)cb(); },180); };
-  const restore=()=>{ const orig=btn.classList.contains('act-copy')?(lang==='zh'?'复制':'Copy'):(lang==='zh'?'打开':'Open'); btn.classList.add('fade-out'); setTimeout(()=>{ te.textContent=orig; btn.classList.remove('fade-out'); btn.classList.add('fade-in'); setTimeout(()=>btn.classList.remove('fade-in'),250); btn.classList.remove('state-done','state-busy','state-err','pulse-pop'); },180); };
-  if(msg===null){ restore(); return; }
-  if(state==='busy'){ setState(); change('<span class="spinner"></span>'+msg); }
-  else if(state==='done'||state==='err'){ setState(); change(msg); }
-  if(duration>0) setTimeout(restore,duration);
-}
-/* ===== 事件委托 ===== */
-document.getElementById('results').addEventListener('click',function(e){ const btn=e.target.closest('button'); if(!btn)return; const item=btn.closest('.item'); if(!item)return; const p=item.getAttribute('data-path'); if(!p)return; if(btn.classList.contains('act-copy'))copyPath(btn,p); else if(btn.classList.contains('act-open'))openPath(btn,p); });
-applyLang(); applyTheme();
+function copyPath(btn,p){const dm=lang==='zh'?'已复制 ✓':'Copied ✓',em=lang==='zh'?'复制失败':'Copy failed';function fb(){try{const ta=document.createElement('textarea');ta.value=p;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);flash(btn,dm,'done');}catch(e){flash(btn,em,'err',2500);}}if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(p).then(()=>flash(btn,dm,'done')).catch(fb);else fb();}
+function openPath(btn,p){const bm=lang==='zh'?'打开中…':'Opening…',dm=lang==='zh'?'已打开 ✓':'Opened ✓';const pu='sku-open://open?path='+encodeURIComponent(p);try{const iframe=document.createElement('iframe');iframe.style.display='none';iframe.src=pu;document.body.appendChild(iframe);flash(btn,bm,'busy',0);setTimeout(()=>flash(btn,dm,'done',0),1300);setTimeout(()=>flash(btn,null,'',0),2900);iframe.addEventListener('load',()=>setTimeout(()=>document.body.removeChild(iframe),2000));setTimeout(()=>{if(!window.__skuOpenInstalled){if(!window.__skuOpenAsked){window.__skuOpenAsked=true;if(confirm(lang==='zh'?'正在尝试打开文件。如果没反应，说明还没安装打开脚本。\n\n需要现在安装打开脚本吗？（仅需安装一次）':'Trying to open… If nothing happens, the opener is not installed. Install now? (once)'))window.location.href='./sku-open-installer-v2.zip';}}},1500);}catch(e){alert('打开失败: '+e.message);}}
+function flash(btn,msg,state,duration){duration=(duration==null)?1500:duration;const te=btn.querySelector('.btntext');const setState=()=>{btn.classList.remove('state-done','state-busy','state-err','pulse-pop');if(state==='done')btn.classList.add('state-done');else if(state==='busy')btn.classList.add('state-busy');else if(state==='err')btn.classList.add('state-err');};const change=(html,cb)=>{btn.classList.add('fade-out');setTimeout(()=>{te.innerHTML=html;btn.classList.remove('fade-out');btn.classList.add('fade-in');btn.classList.add('pulse-pop');setTimeout(()=>btn.classList.remove('fade-in'),250);if(cb)cb();},180);};const restore=()=>{const orig=btn.classList.contains('act-copy')?(lang==='zh'?'复制':'Copy'):(lang==='zh'?'打开':'Open');btn.classList.add('fade-out');setTimeout(()=>{te.textContent=orig;btn.classList.remove('fade-out');btn.classList.add('fade-in');setTimeout(()=>btn.classList.remove('fade-in'),250);btn.classList.remove('state-done','state-busy','state-err','pulse-pop');},180);};if(msg===null){restore();return;}if(state==='busy'){setState();change('<span class="spinner"></span>'+msg);}else if(state==='done'||state==='err'){setState();change(msg);}if(duration>0)setTimeout(restore,duration);}
+document.getElementById('results').addEventListener('click',function(e){const btn=e.target.closest('button');if(!btn)return;const item=btn.closest('.item');if(!item)return;const p=item.getAttribute('data-path');if(!p)return;if(btn.classList.contains('act-copy'))copyPath(btn,p);else if(btn.classList.contains('act-open'))openPath(btn,p);});
+applyLang();applyTheme();
 </script>
 </body>
 </html>
