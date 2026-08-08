@@ -133,6 +133,38 @@ html[data-theme="dark"] .actions button{border-color:rgba(255,255,255,.25)}
 .credit{margin-top:10px;color:var(--text-faint);font-size:10.5px;opacity:.8;letter-spacing:.03em}
 
 @media(max-width:600px){.main{padding:90px 16px 44px}.hero h1{font-size:28px}.topbar{padding:14px 16px}.results{grid-template-columns:1fr}}
+
+/* ===== 反馈栏 ===== */
+.feedback-zone{display:flex;justify-content:center;margin-top:18px}
+.feedback-btn{
+  padding:10px 22px;border-radius:999px;border:1px solid var(--glass-border);cursor:pointer;
+  background:var(--glass);-webkit-backdrop-filter:blur(16px) saturate(160%);backdrop-filter:blur(16px) saturate(160%);
+  color:var(--text);font-size:13px;font-weight:600;font-family:inherit;box-shadow:var(--glass-hi);
+  transition:all .2s;
+}
+.feedback-btn:hover{transform:translateY(-1px);box-shadow:var(--glass-hi),0 6px 18px rgba(0,0,0,.08)}
+.modal-mask{position:fixed;inset:0;z-index:999;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.4);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.modal-mask.show{display:flex}
+.modal{
+  width:min(92%,480px);border-radius:22px;padding:26px;
+  background:var(--glass);-webkit-backdrop-filter:blur(30px) saturate(180%);backdrop-filter:blur(30px) saturate(180%);
+  border:1px solid var(--glass-border);box-shadow:var(--glass-hi),0 20px 60px rgba(0,0,0,.25);
+  color:var(--text);
+}
+.modal h3{font-size:18px;margin-bottom:6px}
+.modal .msub{font-size:12.5px;color:var(--text-sub);margin-bottom:16px}
+.modal textarea,.modal input{
+  width:100%;padding:11px 14px;border-radius:12px;border:1px solid var(--input-border);
+  background:rgba(255,255,255,.45);color:var(--text);font-family:inherit;font-size:14px;outline:none;resize:vertical;
+}
+html[data-theme="dark"] .modal textarea,html[data-theme="dark"] .modal input{background:rgba(0,0,0,.3)}
+.modal textarea{min-height:110px;margin-bottom:12px}
+.modal input{margin-bottom:14px}
+.modal-row{display:flex;gap:10px;justify-content:flex-end}
+.modal-row button{padding:9px 18px;border-radius:12px;border:none;cursor:pointer;font-size:14px;font-weight:600;font-family:inherit}
+.modal-cancel{background:var(--glass);color:var(--text);border:1px solid var(--glass-border)!important}
+.modal-send{background:var(--btn-primary-bg);color:var(--btn-primary-text)}
+
 </style>
 </head>
 <body>
@@ -177,6 +209,9 @@ html[data-theme="dark"] .actions button{border-color:rgba(255,255,255,.25)}
   </div>
   <div class="footer">
   <span data-zh="亚马逊共享盘 · SKU 查询工具" data-en="Amazon Shared Drive · SKU Search Tool">亚马逊共享盘 · SKU 查询工具</span>
+  
+  <div class="feedback-zone"><button class="feedback-btn" onclick="openFeedback()">💬 <span data-zh="反馈 / 建议" data-en="Feedback / Suggestion">反馈 / 建议</span></button></div>
+
   <div class="credit" data-zh="🖋 设计与构建 by 墨" data-en="🖋 Designed & Built by Mo">🖋 设计与构建 by 墨</div>
 </div>
 </div>
@@ -231,7 +266,40 @@ function copyPath(btn,p){const dm=lang==='zh'?'已复制 ✓':'Copied ✓',em=la
 function openPath(btn,p){const bm=lang==='zh'?'打开中…':'Opening…',dm=lang==='zh'?'已打开 ✓':'Opened ✓';const pu='sku-open://open?path='+encodeURIComponent(p);try{const iframe=document.createElement('iframe');iframe.style.display='none';iframe.src=pu;document.body.appendChild(iframe);flash(btn,bm,'busy',0);setTimeout(()=>flash(btn,dm,'done',0),1300);setTimeout(()=>flash(btn,null,'',0),2900);iframe.addEventListener('load',()=>setTimeout(()=>document.body.removeChild(iframe),2000));setTimeout(()=>{if(!window.__skuOpenInstalled){if(!window.__skuOpenAsked){window.__skuOpenAsked=true;if(confirm(lang==='zh'?'正在尝试打开文件。如果没反应，说明还没安装打开脚本。\n\n需要现在安装打开脚本吗？（仅需安装一次）':'Trying to open… If nothing happens, the opener is not installed. Install now? (once)'))window.location.href='./sku-open-installer-v2.zip';}}},1500);}catch(e){alert('打开失败: '+e.message);}}
 function flash(btn,msg,state,duration){duration=(duration==null)?1500:duration;const te=btn.querySelector('.btntext');const setState=()=>{btn.classList.remove('state-done','state-busy','state-err','pulse-pop');if(state==='done')btn.classList.add('state-done');else if(state==='busy')btn.classList.add('state-busy');else if(state==='err')btn.classList.add('state-err');};const change=(html,cb)=>{btn.classList.add('fade-out');setTimeout(()=>{te.innerHTML=html;btn.classList.remove('fade-out');btn.classList.add('fade-in');btn.classList.add('pulse-pop');setTimeout(()=>btn.classList.remove('fade-in'),250);if(cb)cb();},180);};const restore=()=>{const orig=btn.classList.contains('act-copy')?(lang==='zh'?'复制':'Copy'):(lang==='zh'?'打开':'Open');btn.classList.add('fade-out');setTimeout(()=>{te.textContent=orig;btn.classList.remove('fade-out');btn.classList.add('fade-in');setTimeout(()=>btn.classList.remove('fade-in'),250);btn.classList.remove('state-done','state-busy','state-err','pulse-pop');},180);};if(msg===null){restore();return;}if(state==='busy'){setState();change('<span class="spinner"></span>'+msg);}else if(state==='done'||state==='err'){setState();change(msg);}if(duration>0)setTimeout(restore,duration);}
 document.getElementById('results').addEventListener('click',function(e){const btn=e.target.closest('button');if(!btn)return;const item=btn.closest('.item');if(!item)return;const p=item.getAttribute('data-path');if(!p)return;if(btn.classList.contains('act-copy'))copyPath(btn,p);else if(btn.classList.contains('act-open'))openPath(btn,p);});
+
+/* ===== 反馈 ===== */
+function openFeedback(){
+  var m=document.getElementById('fbMask'); m.classList.add('show');
+  var t=document.getElementById('fbText'); if(t) t.value='';
+  var e=document.getElementById('fbEmail'); if(e) e.value='';
+}
+function closeFeedback(){ document.getElementById('fbMask').classList.remove('show'); }
+function sendFeedback(){
+  var text=document.getElementById('fbText').value.trim();
+  var email=document.getElementById('fbEmail').value.trim();
+  if(!text){ alert(lang==='zh'?'请写点什么再提交 ^_^':'Please write something first ^_^'); return; }
+  var subject=encodeURIComponent('[SKU工具] 反馈/建议');
+  var body=encodeURIComponent(text + (email ? '\n\n（来自邮箱: '+email+'）' : '\n\n（匿名）'));
+  window.location.href='mailto:taobaozhou666@gmail.com?subject='+subject+'&body='+body;
+  setTimeout(function(){ closeFeedback(); }, 600);
+}
+
 applyLang();applyTheme();
 </script>
+
+<!-- 反馈模态 -->
+<div class="modal-mask" id="fbMask" onclick="if(event.target===this)closeFeedback()">
+  <div class="modal">
+    <h3>💬 <span data-zh="反馈 / 建议" data-en="Feedback / Suggestion">反馈 / 建议</span></h3>
+    <div class="msub"><span data-zh="想说点什么？选件不好用、想加功能、或者单纯夸两句 😄 写完点提交，会通过邮件发给我。" data-en="Anything on your mind? Something broken, a feature idea, or just a hi 😄 Submit and it goes to my email.">想说点什么？选件不好用、想加功能、或者单纯夸两句 😄 写完点提交，会通过邮件发给我。</span></div>
+    <textarea id="fbText" placeholder="在此输入你的想法..."></textarea>
+    <input id="fbEmail" placeholder="（可选）你的邮箱，方便我回复">
+    <div class="modal-row">
+      <button class="modal-cancel" onclick="closeFeedback()"><span data-zh="取消" data-en="Cancel">取消</span></button>
+      <button class="modal-send" onclick="sendFeedback()">📧 <span data-zh="提交" data-en="Submit">提交</span></button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
