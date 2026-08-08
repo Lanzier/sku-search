@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SKU 路径查询 — 亚马逊共享盘</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,Segoe UI,Microsoft YaHei,sans-serif;background:#f5f6fa;color:#2f3542;padding:18px}
+.container{max-width:900px;margin:0 auto}
+h1{font-size:22px;margin-bottom:4px}
+.sub{color:#747d8c;font-size:13px;margin-bottom:18px}
+.searchbox{display:flex;gap:8px;margin-bottom:10px}
+#q{flex:1;padding:12px 14px;font-size:15px;border:2px solid #dfe4ea;border-radius:8px;outline:none}
+#q:focus{border-color:#3742fa}
+button{padding:11px 18px;font-size:15px;border:none;border-radius:8px;cursor:pointer;background:#3742fa;color:#fff;font-weight:600}
+button:hover{background:#2731d0}
+.stats{color:#747d8c;font-size:12px;margin-bottom:14px;display:flex;justify-content:space-between;flex-wrap:wrap}
+.meta{margin-bottom:10px;color:#57606f;font-size:13px}
+.results{display:flex;flex-direction:column;gap:8px}
+.item{background:#fff;border-radius:8px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.06);display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap}
+.item .info{flex:1;min-width:200px}
+.item .name{font-weight:600;font-size:14px;word-break:break-all}
+.item .path{font-size:12px;color:#747d8c;word-break:break-all;margin-top:3px;font-family:Consolas,monospace}
+.tag{font-size:11px;padding:2px 8px;border-radius:10px;color:#fff;flex-shrink:0}
+.tag.dir{background:#353b48}
+.tag.file{background:#2ed573}
+.actions{display:flex;gap:6px;flex-shrink:0}
+.actions button{background:#dfe4ea;color:#2f3542;padding:7px 10px;font-size:12px;border-radius:6px}
+.actions button.primary{background:#3742fa;color:#fff}
+.empty{background:#fff;border-radius:8px;padding:30px;text-align:center;color:#a4b0be}
+.tip{font-size:12px;color:#a4b0be;margin-top:8px;background:#fff;border-radius:6px;padding:10px 12px}
+.tip b{color:#57606f}
+@media(max-width:600px){.item{flex-direction:column;align-items:flex-start}.actions{width:100%}.actions button{flex:1;padding:10px}}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>🔍 SKU 路径查询</h1>
+<div class="sub">亚马逊共享盘 · 输入 SKU / 编号 / 别名 / 关键词</div>
+<div class="searchbox">
+  <input id="q" placeholder="例如：3012 / RHL1000 / 头盔" autofocus>
+  <button onclick="doSearch()">搜索</button>
+</div>
+<div class="stats">
+  <span id="count"></span>
+  <span id="built"></span>
+</div>
+<div class="meta" id="meta"></div>
+<div class="results" id="results"></div>
+<div class="tip">
+  <b>使用说明：</b>支持 SKU 前缀匹配（搜 3012 → 列出 30120141、30120128 等全部关联 SKU 文件夹）。
+  点击「复制」复制 UNC 路径。点击「打开」需要在电脑上安装一次打开脚本
+  （本页会在首次点击打开时自动引导安装，或联系管理员获取安装包）。
+</div>
+</div>
+<script>
+let INDEX = null;
+const el = {
+  q: document.getElementById('q'),
+  count: document.getElementById('count'),
+  built: document.getElementById('built'),
+  meta: document.getElementById('meta'),
+  results: document.getElementById('results'),
+};
+el.q.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+
+// 加载索引（从同目录 index.json）
+fetch('./index.json')
+  .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+  .then(d => {
+    INDEX = d;
+    const total = (d.dirs ? d.dirs.length : 0) + (d.files ? d.files.length : 0);
+    el.count.textContent = '已收录 ' + total + ' 条SKU/文件夹';
+    if (d.builtAt) el.built.textContent = '索引更新于 ' + d.builtAt.slice(0, 10);
+    document.title = 'SKU 路径查询 (' + total + ')';
+    el.q.focus();
+  })
+  .catch(err => {
+    INDEX = null;
+    el.count.textContent = '⚠️ 索引加载失败';
+    el.meta.textContent = '请确认 index.json 已发布。错误: ' + err.message;
+  });
+
+function doSearch() {
+  const q = el.q.value.trim();
+  if (!INDEX) { el.meta.textContent = '索引未加载，请稍候'; return; }
+  if (!q) { el.results.innerHTML = ''; el.meta.textContent = ''; return; }
+  const needle = q.toUpperCase();
+  const all = [];
+  (INDEX.dirs || []).forEach(d => all.push({ name: d.name, path: d.path, type: 'dir' }));
+  (INDEX.files || []).forEach(f => all.push({ name: f.name, path: f.path, type: 'file' }));
+  const exact = [], prefix = [], contain = [];
+  for (const e of all) {
+    const n = (e.name || '').toUpperCase();
+    if (n === needle) exact.push(e);
+    else if (n.startsWith(needle)) prefix.push(e);
+    else if (n.includes(needle)) contain.push(e);
+  }
+  const data = [...exact.slice(0,30), ...prefix.slice(0,60), ...contain.slice(0,60)];
+  el.meta.textContent = '找到 ' + data.length + ' 条' + (data.length >= data.length_cap?'':'');
+  if (!data.length) { el.results.innerHTML = '<div class="empty">未找到，试试更短的关键词或别的别名</div>'; return; }
+  el.results.innerHTML = data.map(it => {
+    const isDir = it.type === 'dir';
+    return '<div class="item">'
+      + '<div class="info"><div class="name"><span class="tag ' + it.type + '">' + (isDir?'目录':'文件') + '</span> ' + esc(it.name) + '</div>'
+      + '<div class="path">' + esc(it.path) + '</div></div>'
+      + '<div class="actions">'
+      + '<button class="primary" onclick="copyPath(this,' + quote(it.path) + ')">复制</button>'
+      + '<button onclick="openPath(this,' + quote(it.path) + ')">打开</button>'
+      + '</div></div>';
+  }).join('');
+}
+
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function quote(s) { return JSON.stringify(String(s)); }
+
+// 复制路径：尝试用剪贴板API，失败用 execCommand 兜底
+function copyPath(btn, p) {
+  function fallback() {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = p; document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+      flash(btn, '已复制 ✅');
+    } catch (e) { alert('复制失败，请手动复制：\n' + p); }
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(p).then(() => flash(btn, '已复制 ✅')).catch(fallback);
+  } else fallback();
+}
+
+// 打开路径：通过 sku-open:// 自定义协议唤起本地脚本
+function openPath(btn, p) {
+  // Windows/IPC 路径转协议 URL
+  const protoUrl = 'sku-open://open?path=' + encodeURIComponent(p);
+  try {
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = protoUrl;
+    document.body.appendChild(iframe);
+    setTimeout(() => document.body.removeChild(iframe), 2000);
+    // 尝试检测是否已安装（通过一个时间窗口，简化：直接提示）
+    flash(btn, '已发起打开...');
+    setTimeout(() => {
+      if (!window.__skuOpenInstalled) {
+        // 提示安装（只提示一次）
+        if (!window.__skuOpenAsked) {
+          window.__skuOpenAsked = true;
+          if (confirm('正在尝试打开文件。如果没反应，说明还没安装打开脚本。\n\n需要现在安装打开脚本吗？（仅需安装一次）')) {
+            window.location.href = './SKU打开脚本安装.zip';
+          }
+        }
+      }
+    }, 1500);
+  } catch (e) { alert('打开失败：' + e.message); }
+}
+
+function flash(btn, msg) {
+  const old = btn.textContent; btn.textContent = msg;
+  btn.style.background = '#2ed573';
+  setTimeout(() => { btn.textContent = old; btn.style.background = ''; }, 1500);
+}
+</script>
+</body>
+</html>
