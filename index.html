@@ -26,12 +26,23 @@ button:hover{background:#2731d0}
 .tag.dir{background:#353b48}
 .tag.file{background:#2ed573}
 .actions{display:flex;gap:6px;flex-shrink:0}
-.actions button{background:#dfe4ea;color:#2f3542;padding:7px 10px;font-size:12px;border-radius:6px}
+.actions button{background:#dfe4ea;color:#2f3542;padding:7px 10px;font-size:12px;border-radius:6px;position:relative;overflow:hidden;transition:background .25s ease,transform .15s ease,box-shadow .25s ease;min-width:56px}
+.actions button:active{transform:scale(.94)}
 .actions button.primary{background:#3742fa;color:#fff}
+.actions button.state-done{background:#2ed573!important;color:#fff!important;box-shadow:0 2px 8px rgba(46,204,113,.4)}
+.actions button.state-busy{background:#3742fa!important;color:#fff!important;box-shadow:0 2px 8px rgba(55,66,250,.35)}
+.actions button.state-err{background:#e74c3c!important;color:#fff!important}
+.actions button .btntext{display:inline-block;transition:opacity .18s ease,transform .18s ease}
+.actions button.fade-out .btntext{opacity:0;transform:translateY(4px)}
+.actions button.fade-in .btntext{opacity:1;transform:translateY(0)}
+@keyframes pulsePop{0%{transform:scale(1)}40%{transform:scale(1.12)}100%{transform:scale(1)}}
+.actions button.pulse-pop{animation:pulsePop .4s ease}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{display:inline-block;width:10px;height:10px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-1px;margin-right:4px}
 .empty{background:#fff;border-radius:8px;padding:30px;text-align:center;color:#a4b0be}
 .tip{font-size:12px;color:#a4b0be;margin-top:8px;background:#fff;border-radius:6px;padding:10px 12px}
 .tip b{color:#57606f}
-@media(max-width:600px){.item{flex-direction:column;align-items:flex-start}.actions{width:100%}.actions button{flex:1;padding:10px}}
+@media(max-width:600px){.item{flex-direction:column;align-items:flex-start}.actions{width:100%}.actions button{flex:1;padding:10px;min-width:0}}
 </style>
 </head>
 <body>
@@ -107,8 +118,8 @@ function doSearch() {
       + '<div class="info"><div class="name"><span class="tag ' + tag + '">' + (isDir?'目录':'文件') + '</span> ' + esc(it.name) + '</div>'
       + '<div class="path">' + esc(it.path) + '</div></div>'
       + '<div class="actions">'
-      + '<button class="primary act-copy">复制</button>'
-      + '<button class="act-open">打开</button>'
+      + '<button class="primary act-copy"><span class="btntext">复制</span></button>'
+      + '<button class="act-open"><span class="btntext">打开</span></button>'
       + '</div></div>';
   }).join('');
 }
@@ -123,11 +134,11 @@ function copyPath(btn, p) {
       const ta = document.createElement('textarea');
       ta.value = p; document.body.appendChild(ta); ta.select();
       document.execCommand('copy'); document.body.removeChild(ta);
-      flash(btn, '已复制 ✅');
-    } catch (e) { alert('复制失败，请手动复制：\n' + p); }
+      flash(btn, '已复制 ✅', 'done');
+    } catch (e) { flash(btn, '复制失败', 'err', 2500); }
   }
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(p).then(() => flash(btn, '已复制 ✅')).catch(fallback);
+    navigator.clipboard.writeText(p).then(() => flash(btn, '已复制 ✅', 'done')).catch(fallback);
   } else fallback();
 }
 
@@ -142,7 +153,7 @@ function openPath(btn, p) {
     document.body.appendChild(iframe);
     setTimeout(() => document.body.removeChild(iframe), 2000);
     // 尝试检测是否已安装（通过一个时间窗口，简化：直接提示）
-    flash(btn, '已发起打开...');
+    flash(btn, '正在打开…', 'busy', 2500);
     setTimeout(() => {
       if (!window.__skuOpenInstalled) {
         // 提示安装（只提示一次）
@@ -157,10 +168,49 @@ function openPath(btn, p) {
   } catch (e) { alert('打开失败：' + e.message); }
 }
 
-function flash(btn, msg) {
-  const old = btn.textContent; btn.textContent = msg;
-  btn.style.background = '#2ed573';
-  setTimeout(() => { btn.textContent = old; btn.style.background = ''; }, 1500);
+function flash(btn, msg, state, duration) {
+  // state: 'done'(绿) | 'busy'(蓝, 带spinner) | 'err'(红) | ''(恢复)
+  duration = duration || 1500;
+  const textEl = btn.querySelector('.btntext');
+  const setState = () => {
+    btn.classList.remove('state-done','state-busy','state-err','pulse-pop');
+    if (state === 'done') btn.classList.add('state-done');
+    else if (state === 'busy') btn.classList.add('state-busy');
+    else if (state === 'err') btn.classList.add('state-err');
+  };
+  const changeText = (html, then) => {
+    // 旧文字淡出
+    btn.classList.add('fade-out');
+    setTimeout(() => {
+      textEl.innerHTML = html;
+      // 新文字淡入 + 脉冲
+      btn.classList.remove('fade-out');
+      btn.classList.add('fade-in');
+      btn.classList.add('pulse-pop');
+      setTimeout(() => btn.classList.remove('fade-in'), 250);
+      if (then) then();
+    }, 180);
+  };
+
+  if (state === 'busy') {
+    setState();
+    changeText('<span class="spinner"></span>' + msg);
+  } else if (state === 'done' || state === 'err') {
+    setState();
+    changeText(msg);
+    // 几秒后恢复原样
+    setTimeout(() => {
+      const orig = btn.classList.contains('act-copy') ? '复制' : '打开';
+      btn.classList.add('fade-out');
+      setTimeout(() => {
+        textEl.textContent = orig;
+        btn.classList.remove('fade-out');
+        btn.classList.add('fade-in');
+        setTimeout(() => btn.classList.remove('fade-in'), 250);
+        btn.classList.remove('state-done','state-busy','state-err','pulse-pop');
+      }, 180);
+    }, duration);
+  }
 }
 
 // 事件委托：点击"复制"/"打开"按钮
