@@ -5,146 +5,104 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SKU 路径查询</title>
 <style>
-/* ===== iOS 26 液态玻璃 + 纯黑白 ===== */
+/* ===== iOS 26 液态玻璃 · 全组件玻璃质感 ===== */
 html[data-theme="light"]{
-  --bg:#f5f5f7;
   --text:#1d1d1f;
   --text-sub:#6e6e73;
-  --text-faint:#a1a1a6;
-  --glass:rgba(255,255,255,.62);
-  --glass-strong:rgba(255,255,255,.78);
-  --glass-border:rgba(255,255,255,.85);
-  --glass-hi:inset 0 1px 1px rgba(255,255,255,.9), inset 0 -1px 1px rgba(255,255,255,.25);
-  --glass-shadow:0 12px 40px rgba(0,0,0,.10), 0 2px 8px rgba(0,0,0,.06);
-  --glow1:rgba(202,205,214,.4);
-  --glow2:rgba(226,226,232,.5);
-  --glow3:rgba(212,212,220,.35);
-  --primary:#000000;
-  --on-primary:#ffffff;
-  --input-border:rgba(0,0,0,.10);
+  --text-faint:#9a9aa0;
+  --glass:rgba(255,255,255,.58);
+  --glass-soft:rgba(255,255,255,.42);
+  --glass-border:rgba(255,255,255,.9);
+  --glass-brd2:rgba(255,255,255,.5);
+  --glass-hi:inset 0 1px 1px rgba(255,255,255,.95), inset 0 -1px 1px rgba(255,255,255,.35);
+  --glass-shadow:0 10px 32px rgba(60,60,80,.12), 0 2px 6px rgba(60,60,80,.05);
+  --btn-text:#1d1d1f;          /* 按钮文字(日) */
+  --btn-primary-bg:#111; --btn-primary-text:#fff;
+  --input-border:rgba(90,90,120,.14);
+  --glow-bg:
+    radial-gradient(640px 420px at 12% 6%, rgba(190,198,235,.55), transparent 62%),
+    radial-gradient(540px 400px at 88% 12%, rgba(210,190,235,.5), transparent 60%),
+    radial-gradient(620px 460px at 50% 96%, rgba(185,215,235,.5), transparent 62%),
+    radial-gradient(480px 360px at 80% 60%, rgba(235,200,190,.35), transparent 60%),
+    radial-gradient(400px 300px at 25% 75%, rgba(190,230,205,.35), transparent 60%);
 }
 html[data-theme="dark"]{
-  --bg:#000000;
   --text:#f5f5f7;
-  --text-sub:#86868b;
-  --text-faint:#48484d;
-  --glass:rgba(28,28,30,.55);
-  --glass-strong:rgba(28,28,30,.75);
-  --glass-border:rgba(255,255,255,.12);
-  --glass-hi:inset 0 1px 1px rgba(255,255,255,.16), inset 0 -1px 1px rgba(255,255,255,.05);
+  --text-sub:#a1a1a6;
+  --text-faint:#6a6a70;
+  --glass:rgba(24,24,30,.55);
+  --glass-soft:rgba(24,24,30,.4);
+  --glass-border:rgba(255,255,255,.18);
+  --glass-brd2:rgba(255,255,255,.09);
+  --glass-hi:inset 0 1px 1px rgba(255,255,255,.2), inset 0 -1px 1px rgba(255,255,255,.05);
   --glass-shadow:0 12px 40px rgba(0,0,0,.55), 0 2px 8px rgba(0,0,0,.4);
-  --glow1:rgba(80,80,90,.35);
-  --glow2:rgba(40,40,48,.4);
-  --glow3:rgba(60,60,70,.3);
-  --primary:#ffffff;
-  --on-primary:#000000;
-  --input-border:rgba(255,255,255,.16);
+  --btn-text:#ffffff;          /* 按钮文字(夜) — 强制白色 */
+  --btn-primary-bg:#ffffff; --btn-primary-text:#000;
+  --input-border:rgba(255,255,255,.18);
+  --glow-bg:
+    radial-gradient(640px 420px at 12% 6%, rgba(60,70,110,.5), transparent 62%),
+    radial-gradient(540px 400px at 88% 12%, rgba(80,55,110,.45), transparent 60%),
+    radial-gradient(620px 460px at 50% 96%, rgba(50,80,120,.5), transparent 62%),
+    radial-gradient(480px 360px at 80% 60%, rgba(100,55,45,.35), transparent 60%),
+    radial-gradient(400px 300px at 25% 75%, rgba(45,100,65,.38), transparent 60%);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
 body{
   font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
-  color:var(--text);background:var(--bg);
+  color:var(--text);background:#111;overflow-x:hidden;
   -webkit-font-smoothing:antialiased;
-  overflow-x:hidden;
-  transition:background .4s ease,color .3s ease;
 }
-/* 液态玻璃背景：模糊光斑 */
-.bg-fx{position:fixed;inset:0;z-index:0;pointer-events:none;
-  background:
-    radial-gradient(600px 400px at 12% 8%, var(--glow1), transparent 65%),
-    radial-gradient(500px 380px at 88% 16%, var(--glow2), transparent 62%),
-    radial-gradient(560px 420px at 50% 95%, var(--glow3), transparent 66%);
-  transition:background .4s ease;
-}
-body::before{
-  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
-  backdrop-filter:blur(2px);
-}
+/* 液态玻璃背景 */
+.bg-fx{position:fixed;inset:0;z-index:0;pointer-events:none;background:var(--glow-bg);background-size:cover;animation:bgfloat 26s ease-in-out infinite alternate}
+@keyframes bgfloat{0%{transform:translate(0,0) scale(1)}100%{transform:translate(-1.5%,1%) scale(1.04)}}
+body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5;background-image:radial-gradient(rgba(255,255,255,.25) .5px, transparent .5px),radial-gradient(rgba(255,255,255,.18) .5px, transparent .5px);background-size:34px 34px,34px 34px;background-position:0 0,17px 17px;mix-blend-mode:overlay}
+html[data-theme="dark"] body::after{opacity:.25}
 
-/* 顶栏：液态玻璃吸顶 */
-.topbar{
-  position:sticky;top:0;z-index:100;width:100%;
-  padding:16px 28px;display:flex;align-items:center;justify-content:space-between;
-  background:var(--glass);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);
-  border-bottom:1px solid var(--glass-border);
-}
+/* 顶栏 */
+.topbar{position:sticky;top:0;z-index:100;width:100%;padding:16px 28px;display:flex;align-items:center;justify-content:space-between;background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);border-bottom:1px solid var(--glass-brd2);box-shadow:var(--glass-hi),0 4px 20px rgba(0,0,0,.05)}
 .topbar-title{font-size:17px;font-weight:600;letter-spacing:-.01em}
-.controls{display:flex;gap:8px}
-.ctl{
-  display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;
-  background:var(--glass-strong);color:var(--text);border:1px solid var(--glass-border);
-  box-shadow:var(--glass-hi),0 2px 8px rgba(0,0,0,.05);
-  font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .2s ease;
-  backdrop-filter:blur(10px);
-}
+.controls{display:flex;gap:10px}
+.ctl{display:flex;align-items:center;gap:6px;padding:9px 16px;border-radius:999px;background:var(--glass);-webkit-backdrop-filter:blur(18px) saturate(170%);backdrop-filter:blur(18px) saturate(170%);color:var(--text);border:1px solid var(--glass-border);box-shadow:var(--glass-hi),0 2px 10px rgba(0,0,0,.06);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .2s ease}
 .ctl:hover{transform:translateY(-1px)}
 .ctl:active{transform:scale(.96)}
 
-/* 主体：全宽推满 */
-.main{position:relative;z-index:1;width:100%;padding:36px 28px 60px;max-width:none}
-
-.hero{text-align:center;margin-bottom:32px}
-.hero h1{font-size:42px;font-weight:700;letter-spacing:-.03em}
+/* 主体全宽 */
+.main{position:relative;z-index:1;width:100%;padding:40px 32px 60px}
+.hero{text-align:center;margin-bottom:34px}
+.hero h1{font-size:40px;font-weight:700;letter-spacing:-.03em}
 .hero .sub{font-size:15px;color:var(--text-sub);margin-top:10px}
 
-/* 搜索：液态玻璃浮层 */
-.search-wrap{max-width:560px;margin:0 auto 30px}
-.searchbox{
-  display:flex;align-items:center;padding:6px;border-radius:18px;
-  background:var(--glass);backdrop-filter:blur(24px) saturate(160%);-webkit-backdrop-filter:blur(24px) saturate(160%);
-  border:1px solid var(--glass-border);box-shadow:var(--glass-hi),var(--glass-shadow);
-}
-#q{flex:1;padding:14px 18px;font-size:16px;color:var(--text);background:transparent;border:none;outline:none;font-family:inherit}
+/* 搜索玻璃 */
+.search-wrap{max-width:580px;margin:0 auto 32px}
+.searchbox{display:flex;align-items:center;padding:6px;border-radius:20px;background:var(--glass);-webkit-backdrop-filter:blur(30px) saturate(180%);backdrop-filter:blur(30px) saturate(180%);border:1px solid var(--glass-border);box-shadow:var(--glass-hi),var(--glass-shadow)}
+#q{flex:1;padding:15px 18px;font-size:16px;color:var(--text);background:transparent;border:none;outline:none;font-family:inherit}
 #q::placeholder{color:var(--text-sub)}
-button.search-btn{
-  padding:12px 24px;border:none;border-radius:12px;cursor:pointer;font-size:15px;font-weight:600;
-  background:linear-gradient(180deg,rgba(0,0,0,.82),rgba(0,0,0,.92));color:#fff;
-  transition:transform .15s ease,opacity .2s;font-family:inherit;
-}
-html[data-theme="dark"] button.search-btn{background:linear-gradient(180deg,#fff,#e8e8ed);color:#000}
+button.search-btn{padding:12px 26px;border:none;border-radius:14px;cursor:pointer;font-size:15px;font-weight:600;background:var(--btn-primary-bg);color:var(--btn-primary-text);transition:transform .15s ease,opacity .2s;font-family:inherit}
 button.search-btn:hover{opacity:.88}
 button.search-btn:active{transform:scale(.95)}
 
-.quick{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:24px}
-.chip{
-  font-size:13px;color:var(--text-sub);background:var(--glass);border:1px solid var(--glass-border);
-  padding:6px 16px;border-radius:999px;cursor:pointer;font-family:inherit;transition:all .18s ease;
-  backdrop-filter:blur(10px);box-shadow:var(--glass-hi);
-}
-.chip:hover{color:var(--text);transform:translateY(-1px)}
+.quick{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:26px}
+.chip{font-size:13px;color:var(--text);padding:7px 18px;border-radius:999px;cursor:pointer;font-family:inherit;transition:all .18s ease;background:var(--glass);-webkit-backdrop-filter:blur(16px) saturate(160%);backdrop-filter:blur(16px) saturate(160%);border:1px solid var(--glass-border);box-shadow:var(--glass-hi)}
+.chip:hover{transform:translateY(-1px)}
 
-/* 结果：玻璃卡片网格 · 全宽 */
-.stats{max-width:1100px;margin:0 auto 10px;display:flex;justify-content:space-between;color:var(--text-faint);font-size:12px}
-.meta{margin-bottom:12px;color:var(--text-sub);font-size:13px;font-weight:500}
-.results{
-  display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));
-  gap:14px;max-width:1300px;margin:0 auto;
-}
-.item{
-  background:var(--glass);backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%);
-  border:1px solid var(--glass-border);box-shadow:var(--glass-hi),var(--glass-shadow);
-  border-radius:20px;padding:18px 20px;display:flex;flex-direction:column;gap:10px;
-  transition:transform .2s ease,box-shadow .25s ease;
-}
-.item:hover{transform:translateY(-3px);box-shadow:var(--glass-hi),0 18px 50px rgba(0,0,0,.14)}
-.item .info{min-width:0}
-.item .name{font-weight:600;font-size:14.5px;word-break:break-all;display:flex;align-items:center;gap:8px}
-.item .path{font-size:12px;color:var(--text-sub);word-break:break-all;margin-top:5px;font-family:Consolas,Menlo,monospace;line-height:1.4}
-.tag{font-size:10.5px;padding:2px 9px;border-radius:999px;font-weight:600;flex-shrink:0}
-.tag.dir{background:var(--text);color:var(--bg)}
-.tag.file{background:rgba(120,120,128,.14);color:var(--text)}
-.actions{display:flex;gap:8px;margin-top:2px}
-.actions button{
-  flex:1;padding:10px 14px;font-size:13px;font-weight:600;border-radius:12px;border:1px solid var(--glass-border);
-  background:rgba(255,255,255,.55);color:var(--text);cursor:pointer;font-family:inherit;position:relative;overflow:hidden;
-  transition:all .2s ease;box-shadow:var(--glass-hi);
-}
-html[data-theme="dark"] .actions button{background:rgba(255,255,255,.08)}
-.actions button.primary{background:var(--text);border-color:var(--text);color:var(--bg)}
+.stats{max-width:1280px;margin:0 auto 12px;display:flex;justify-content:space-between;color:var(--text-faint);font-size:12px}
+.meta{margin-bottom:14px;color:var(--text-sub);font-size:13px;font-weight:500}
+.results{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,350px),1fr));gap:16px;max-width:1400px;margin:0 auto}
+.item{background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);border:1px solid var(--glass-border);box-shadow:var(--glass-hi),var(--glass-shadow);border-radius:22px;padding:20px;display:flex;flex-direction:column;gap:12px;transition:transform .2s ease,box-shadow .25s ease}
+.item:hover{transform:translateY(-3px);box-shadow:var(--glass-hi),0 20px 48px rgba(0,0,0,.14)}
+.item .name{font-weight:600;font-size:14.5px;word-break:break-all;display:flex;align-items:center;gap:8px;color:var(--text)}
+.item .path{font-size:12px;color:var(--text-sub);word-break:break-all;margin-top:6px;font-family:Consolas,Menlo,monospace;line-height:1.5;border-left:2px solid var(--glass-brd2);padding-left:10px}
+.tag{font-size:10.5px;padding:2px 10px;border-radius:999px;font-weight:600;flex-shrink:0;background:var(--glass-soft);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid var(--glass-border);color:var(--text)}
+.tag.dir{background:var(--btn-primary-bg);color:var(--btn-primary-text);border-color:transparent}
+
+.actions{display:flex;gap:10px;margin-top:4px}
+.actions button{flex:1;padding:11px 14px;font-size:13px;font-weight:600;border-radius:14px;border:1px solid var(--glass-border);cursor:pointer;font-family:inherit;position:relative;overflow:hidden;transition:all .2s ease;background:var(--glass);-webkit-backdrop-filter:blur(18px) saturate(160%);backdrop-filter:blur(18px) saturate(160%);color:var(--btn-text);box-shadow:var(--glass-hi)}
+html[data-theme="dark"] .actions button{border-color:rgba(255,255,255,.25)}
+.actions button.primary{background:var(--btn-primary-bg);border-color:var(--btn-primary-bg);color:var(--btn-primary-text)}
 .actions button:active{transform:scale(.95)}
-.actions button.state-done{background:rgba(52,199,89,.85);border-color:rgba(52,199,89,.85);color:#fff!important}
-.actions button.state-busy{background:rgba(100,100,110,.75);border-color:transparent;color:#fff!important}
+.actions button.state-done{background:rgba(52,199,89,.85);border-color:transparent;color:#fff!important}
+.actions button.state-busy{background:rgba(80,80,100,.8);border-color:transparent;color:#fff!important}
 .actions button.state-err{background:rgba(255,69,58,.85);border-color:transparent;color:#fff!important}
 .actions button .btntext{display:inline-block;transition:opacity .18s ease,transform .18s ease}
 .actions button.fade-out .btntext{opacity:0;transform:translateY(4px)}
@@ -152,19 +110,15 @@ html[data-theme="dark"] .actions button{background:rgba(255,255,255,.08)}
 @keyframes pulsePop{0%{transform:scale(1)}40%{transform:scale(1.1)}100%{transform:scale(1)}}
 .actions button.pulse-pop{animation:pulsePop .4s ease}
 @keyframes spin{to{transform:rotate(360deg)}}
-.spinner{display:inline-block;width:11px;height:11px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-1px;margin-right:5px}
-.empty{padding:50px 20px;text-align:center;color:var(--text-faint);font-size:15px}
+.spinner{display:inline-block;width:11px;height:11px;border:2px solid rgba(128,128,128,.4);border-top-color:var(--text);border-radius:50%;animation:spin .7s linear infinite;vertical-align:-1px;margin-right:5px}
 
-.tip{max-width:1100px;margin:28px auto 0;font-size:12.5px;color:var(--text-sub);line-height:1.8;padding:16px 20px;border-radius:16px;background:var(--glass);border:1px solid var(--glass-border);box-shadow:var(--glass-hi)}
+.empty{margin:0 auto;max-width:1400px;padding:52px 20px;text-align:center;color:var(--text-faint);font-size:15px;background:var(--glass);-webkit-backdrop-filter:blur(20px) saturate(150%);backdrop-filter:blur(20px) saturate(150%);border:1px dashed var(--glass-brd2);border-radius:22px;box-shadow:var(--glass-hi)}
+
+.tip{max-width:1280px;margin:30px auto 0;font-size:12.5px;color:var(--text-sub);line-height:1.8;padding:18px 22px;border-radius:18px;background:var(--glass);-webkit-backdrop-filter:blur(20px) saturate(150%);backdrop-filter:blur(20px) saturate(150%);border:1px solid var(--glass-border);box-shadow:var(--glass-hi)}
 .tip b{color:var(--text)}
-.footer{text-align:center;margin-top:30px;color:var(--text-faint);font-size:11px;letter-spacing:.04em}
+.footer{text-align:center;margin-top:32px;color:var(--text-faint);font-size:11px;letter-spacing:.05em}
 
-@media(max-width:600px){
-  .main{padding:24px 16px 40px}
-  .hero h1{font-size:30px}
-  .topbar{padding:14px 16px}
-  .results{grid-template-columns:1fr}
-}
+@media(max-width:600px){.main{padding:26px 16px 44px}.hero h1{font-size:28px}.topbar{padding:14px 16px}.results{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -224,7 +178,8 @@ function applyLang(){
 function applyTheme(){
   const t=document.documentElement.getAttribute('data-theme')==='dark'?'dark':'light';
   document.getElementById('themeIcon').textContent=t==='dark'?'☀️':'🌙';
-  const lbl=document.querySelector('#themeBtn .ctl-label');if(lbl){lbl.dataset.zh=t==='dark'?'浅色':'深色';lbl.dataset.en=t==='dark'?'Light':'Dark';if(lang)applyLang();}
+  const lbl=document.querySelector('#themeBtn .ctl-label');if(lbl){lbl.dataset.zh=t==='dark'?'浅色':'深色';lbl.dataset.en=t==='dark'?'Light':'Dark';}
+  applyLang();
 }
 document.getElementById('langBtn').addEventListener('click',()=>{const n=(document.documentElement.getAttribute('data-lang')||'zh')==='zh'?'en':'zh';document.documentElement.setAttribute('data-lang',n);localStorage.setItem('sku_lang',n);applyLang();});
 document.getElementById('themeBtn').addEventListener('click',()=>{const n=(document.documentElement.getAttribute('data-theme')||'light')==='light'?'dark':'light';document.documentElement.setAttribute('data-theme',n);localStorage.setItem('sku_theme',n);applyTheme();});
@@ -246,7 +201,7 @@ function doSearch(){
   el.meta.textContent=(lang==='zh'?'找到 ':'Found ')+data.length+(lang==='zh'?' 条':' results');
   if(!data.length){el.results.innerHTML='<div class="empty">'+(lang==='zh'?'未找到，试试更短的关键词或别的别名':'No results. Try shorter keyword.')+'</div>';return;}
   const dl=lang==='zh'?'目录':'Dir',fl=lang==='zh'?'文件':'File',cl=lang==='zh'?'复制':'Copy',ol=lang==='zh'?'打开':'Open';
-  el.results.innerHTML=data.map(it=>{const isDir=it.type==='dir';return '<div class="item" data-path="'+escAttr(it.path)+'"><div class="info"><div class="name"><span class="tag '+(isDir?'dir':'file')+'">'+(isDir?dl:fl)+'</span>'+esc(it.name)+'</div><div class="path">'+esc(it.path)+'</div></div><div class="actions"><button class="primary act-copy"><span class="btntext">'+cl+'</span></button><button class="act-open"><span class="btntext">'+ol+'</span></button></div></div>';}).join('');
+  el.results.innerHTML=data.map(it=>{const isDir=it.type==='dir';return '<div class="item" data-path="'+escAttr(it.path)+'"><div class="name"><span class="tag '+(isDir?'dir':'file')+'">'+(isDir?dl:fl)+'</span>'+esc(it.name)+'</div><div class="path">'+esc(it.path)+'</div><div class="actions"><button class="primary act-copy"><span class="btntext">'+cl+'</span></button><button class="act-open"><span class="btntext">'+ol+'</span></button></div></div>';}).join('');
 }
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function escAttr(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
