@@ -165,6 +165,36 @@ html[data-theme="dark"] .modal textarea,html[data-theme="dark"] .modal input{bac
 .modal-cancel{background:var(--glass);color:var(--text);border:1px solid var(--glass-border)!important}
 .modal-send{background:var(--btn-primary-bg);color:var(--btn-primary-text)}
 
+
+/* ===== 自定义 Toast 提示 ===== */
+.toast-wrap{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);z-index:2000;display:flex;flex-direction:column;align-items:center;gap:10px;pointer-events:none}
+.toast{
+  padding:12px 22px;border-radius:14px;font-size:14px;font-weight:600;color:var(--text);
+  background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(170%);backdrop-filter:blur(24px) saturate(170%);
+  border:1px solid var(--glass-border);box-shadow:var(--glass-hi),0 10px 30px rgba(0,0,0,.15);
+  opacity:0;transform:translateY(12px) scale(.97);transition:opacity .28s ease,transform .28s ease;
+  max-width:min(88vw,480px);text-align:center;
+}
+.toast.show{opacity:1;transform:translateY(0) scale(1)}
+.toast.success{border-color:rgba(52,199,89,.6);color:#1f9d52}
+.toast.error{border-color:rgba(255,69,58,.6);color:#e0352b}
+.toast .t-msg{display:inline-block;vertical-align:middle}
+
+
+/* 自定义确认弹窗 */
+.confirm-mask{position:fixed;inset:0;z-index:3000;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.4);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.confirm-mask.show{display:flex}
+.confirm{
+  width:min(90%,400px);border-radius:20px;padding:24px;text-align:center;
+  background:var(--glass);-webkit-backdrop-filter:blur(30px) saturate(180%);backdrop-filter:blur(30px) saturate(180%);
+  border:1px solid var(--glass-border);box-shadow:var(--glass-hi),0 20px 60px rgba(0,0,0,.25);color:var(--text);
+}
+.confirm .c-msg{font-size:14.5px;line-height:1.8;margin-bottom:18px;text-align:left}
+.confirm .c-row{display:flex;gap:10px;justify-content:center}
+.confirm .c-row button{padding:10px 20px;border-radius:12px;border:none;cursor:pointer;font-size:14px;font-weight:600;font-family:inherit}
+.confirm .c-no{background:var(--glass);border:1px solid var(--glass-border)!important;color:var(--text)}
+.confirm .c-yes{background:var(--btn-primary-bg);color:var(--btn-primary-text)}
+
 </style>
 </head>
 <body>
@@ -217,6 +247,37 @@ html[data-theme="dark"] .modal textarea,html[data-theme="dark"] .modal input{bac
 </div>
 
 <script>
+
+/* ===== 自定义 Toast 提示（替代浏览器 alert） ===== */
+function showToast(msg, type){
+  type = type || 'info';
+  var wrap = document.getElementById('toastWrap');
+  if(!wrap){ wrap=document.createElement('div'); wrap.id='toastWrap'; wrap.className='toast-wrap'; document.body.appendChild(wrap); }
+  var t=document.createElement('div'); t.className='toast '+type;
+  t.innerHTML='<span class="t-msg">'+msg+'</span>';
+  wrap.appendChild(t);
+  requestAnimationFrame(function(){ t.classList.add('show'); });
+  setTimeout(function(){ t.classList.remove('show'); setTimeout(function(){ t.remove(); },300); }, 2600);
+}
+
+
+/* ===== 自定义确认弹窗（替代 confirm） ===== */
+function showConfirm(msg, onYes){
+  var m=document.getElementById('confirmMask');
+  if(!m){
+    m=document.createElement('div'); m.id='confirmMask'; m.className='confirm-mask';
+    m.innerHTML='<div class="confirm"><div class="c-msg"></div><div class="c-row"><button class="c-no"></button><button class="c-yes"></button></div></div>';
+    document.body.appendChild(m);
+  }
+  m.querySelector('.c-msg').innerHTML=msg;
+  var zh=lang==='zh';
+  m.querySelector('.c-no').textContent=zh?'取消':'Cancel';
+  m.querySelector('.c-yes').textContent=zh?'确定':'OK';
+  m.querySelector('.c-no').onclick=function(){ m.classList.remove('show'); };
+  m.querySelector('.c-yes').onclick=function(){ m.classList.remove('show'); if(onYes)onYes(); };
+  m.classList.add('show');
+}
+
 let INDEX=null, lang='zh';
 const el={q:document.getElementById('q'),count:document.getElementById('count'),built:document.getElementById('built'),meta:document.getElementById('meta'),results:document.getElementById('results')};
 el.q.addEventListener('keydown',e=>{if(e.key==='Enter')doSearch();});
@@ -263,7 +324,7 @@ function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').repl
 function escAttr(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
 function copyPath(btn,p){const dm=lang==='zh'?'已复制 ✓':'Copied ✓',em=lang==='zh'?'复制失败':'Copy failed';function fb(){try{const ta=document.createElement('textarea');ta.value=p;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);flash(btn,dm,'done');}catch(e){flash(btn,em,'err',2500);}}if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(p).then(()=>flash(btn,dm,'done')).catch(fb);else fb();}
-function openPath(btn,p){const bm=lang==='zh'?'打开中…':'Opening…',dm=lang==='zh'?'已打开 ✓':'Opened ✓';const pu='sku-open://open?path='+encodeURIComponent(p);try{const iframe=document.createElement('iframe');iframe.style.display='none';iframe.src=pu;document.body.appendChild(iframe);flash(btn,bm,'busy',0);setTimeout(()=>flash(btn,dm,'done',0),1300);setTimeout(()=>flash(btn,null,'',0),2900);iframe.addEventListener('load',()=>setTimeout(()=>document.body.removeChild(iframe),2000));setTimeout(()=>{if(!window.__skuOpenInstalled){if(!window.__skuOpenAsked){window.__skuOpenAsked=true;if(confirm(lang==='zh'?'正在尝试打开文件。如果没反应，说明还没安装打开脚本。\n\n需要现在安装打开脚本吗？（仅需安装一次）':'Trying to open… If nothing happens, the opener is not installed. Install now? (once)'))window.location.href='./sku-open-installer-v2.zip';}}},1500);}catch(e){alert('打开失败: '+e.message);}}
+function openPath(btn,p){const bm=lang==='zh'?'打开中…':'Opening…',dm=lang==='zh'?'已打开 ✓':'Opened ✓';const pu='sku-open://open?path='+encodeURIComponent(p);try{const iframe=document.createElement('iframe');iframe.style.display='none';iframe.src=pu;document.body.appendChild(iframe);flash(btn,bm,'busy',0);setTimeout(()=>flash(btn,dm,'done',0),1300);setTimeout(()=>flash(btn,null,'',0),2900);iframe.addEventListener('load',()=>setTimeout(()=>document.body.removeChild(iframe),2000));setTimeout(()=>{if(!window.__skuOpenInstalled){if(!window.__skuOpenAsked){window.__skuOpenAsked=true;showConfirm(lang==='zh'?'正在尝试打开文件。如果没反应，说明还没安装打开脚本。<br>需要现在安装打开脚本吗？（仅需安装一次）':'Trying to open… If nothing happens, the opener is not installed.<br>Install now? (once)',function(){window.location.href='./sku-open-installer-v2.zip';});}}},1500);}catch(e){showToast('打开失败: '+e.message,'error');}}
 function flash(btn,msg,state,duration){duration=(duration==null)?1500:duration;const te=btn.querySelector('.btntext');const setState=()=>{btn.classList.remove('state-done','state-busy','state-err','pulse-pop');if(state==='done')btn.classList.add('state-done');else if(state==='busy')btn.classList.add('state-busy');else if(state==='err')btn.classList.add('state-err');};const change=(html,cb)=>{btn.classList.add('fade-out');setTimeout(()=>{te.innerHTML=html;btn.classList.remove('fade-out');btn.classList.add('fade-in');btn.classList.add('pulse-pop');setTimeout(()=>btn.classList.remove('fade-in'),250);if(cb)cb();},180);};const restore=()=>{const orig=btn.classList.contains('act-copy')?(lang==='zh'?'复制':'Copy'):(lang==='zh'?'打开':'Open');btn.classList.add('fade-out');setTimeout(()=>{te.textContent=orig;btn.classList.remove('fade-out');btn.classList.add('fade-in');setTimeout(()=>btn.classList.remove('fade-in'),250);btn.classList.remove('state-done','state-busy','state-err','pulse-pop');},180);};if(msg===null){restore();return;}if(state==='busy'){setState();change('<span class="spinner"></span>'+msg);}else if(state==='done'||state==='err'){setState();change(msg);}if(duration>0)setTimeout(restore,duration);}
 document.getElementById('results').addEventListener('click',function(e){const btn=e.target.closest('button');if(!btn)return;const item=btn.closest('.item');if(!item)return;const p=item.getAttribute('data-path');if(!p)return;if(btn.classList.contains('act-copy'))copyPath(btn,p);else if(btn.classList.contains('act-open'))openPath(btn,p);});
 
@@ -279,7 +340,7 @@ var FORMSPREE_ID = 'xjybgrby';
 function sendFeedback(){
   var text=document.getElementById('fbText').value.trim();
   var email=document.getElementById('fbEmail').value.trim();
-  if(!text){ alert(lang==='zh'?'请写点什么再提交 ^_^':'Please write something first ^_^'); return; }
+  if(!text){ showToast(lang==='zh'?'请写点什么再提交 ^_^':'Please write something first ^_^','error'); return; }
   var btn=document.querySelector('.modal-send');
   if(btn){ btn.disabled=true; btn.textContent= lang==='zh'?'提交中…':'Sending…'; }
   var payload={ _subject:'[SKU工具] 反馈/建议', message:text, email:(email||'匿名') };
@@ -287,8 +348,8 @@ function sendFeedback(){
     method:'POST', headers:{'Accept':'application/json','Content-Type':'application/json'},
     body:JSON.stringify(payload)
   }).then(function(res){ if(res.ok){ return res.json(); } throw new Error(res.statusText); })
-    .then(function(){ alert(lang==='zh'?'✅ 已收到，谢谢你的反馈！':'✅ Got it, thanks for the feedback!'); closeFeedback(); })
-    .catch(function(e){ alert(lang==='zh'?'发送失败，请重试或直接联系管理员。':'Send failed, please retry or contact admin.'); })
+    .then(function(){ showToast(lang==='zh'?'✅ 已收到，谢谢你的反馈！':'✅ Got it, thanks!','success'); closeFeedback(); })
+    .catch(function(e){ showToast(lang==='zh'?'发送失败，请重试或直接联系管理员。':'Send failed, please retry or contact admin.','error'); })
     .finally(function(){ if(btn){ btn.disabled=false; btn.textContent='📧 '+(lang==='zh'?'提交':'Submit'); } });
 }
 
