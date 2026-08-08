@@ -55,8 +55,20 @@ body{
   -webkit-font-smoothing:antialiased;
 }
 /* 液态玻璃背景 */
-.bg-fx{position:fixed;inset:0;z-index:0;pointer-events:none;background:var(--glow-bg);background-size:cover;animation:bgfloat 26s ease-in-out infinite alternate}
-@keyframes bgfloat{0%{transform:translate(0,0) scale(1)}100%{transform:translate(-1.5%,1%) scale(1.04)}}
+/* 动态光斑层（独立色块各自流动） */
+.blob{position:fixed;z-index:0;pointer-events:none;border-radius:50%;filter:blur(70px);will-change:transform,opacity}
+.blob-1{width:520px;height:520px;top:-8%;left:-6%;background:radial-gradient(circle,rgba(140,165,255,.55),transparent 70%);animation:blob1 18s ease-in-out infinite alternate}
+.blob-2{width:440px;height:440px;top:12%;right:-8%;background:radial-gradient(circle,rgba(255,150,215,.45),transparent 70%);animation:blob2 22s ease-in-out infinite alternate}
+.blob-3{width:500px;height:500px;bottom:-10%;right:6%;background:radial-gradient(circle,rgba(120,200,255,.5),transparent 70%);animation:blob3 20s ease-in-out infinite alternate}
+.blob-4{width:380px;height:380px;top:55%;left:2%;background:radial-gradient(circle,rgba(255,180,160,.4),transparent 70%);animation:blob4 25s ease-in-out infinite alternate}
+html[data-theme="dark"] .blob-1{background:radial-gradient(circle,rgba(60,80,160,.45),transparent 70%)}
+html[data-theme="dark"] .blob-2{background:radial-gradient(circle,rgba(120,50,120,.4),transparent 70%)}
+html[data-theme="dark"] .blob-3{background:radial-gradient(circle,rgba(50,110,170,.45),transparent 70%)}
+html[data-theme="dark"] .blob-4{background:radial-gradient(circle,rgba(140,80,60,.35),transparent 70%)}
+@keyframes blob1{0%{transform:translate(0,0) scale(1);opacity:.5}50%{transform:translate(70px,50px) scale(1.15);opacity:.75}100%{transform:translate(20px,90px) scale(0.95);opacity:.55}}
+@keyframes blob2{0%{transform:translate(0,0) scale(1);opacity:.45}50%{transform:translate(-60px,80px) scale(1.1);opacity:.7}100%{transform:translate(30px,30px) scale(1.2);opacity:.5}}
+@keyframes blob3{0%{transform:translate(0,0) scale(1);opacity:.5}50%{transform:translate(-80px,-50px) scale(1.18);opacity:.75}100%{transform:translate(-20px,-90px) scale(0.9);opacity:.55}}
+@keyframes blob4{0%{transform:translate(0,0) scale(1);opacity:.4}50%{transform:translate(50px,-70px) scale(1.12);opacity:.65}100%{transform:translate(-40px,-20px) scale(1.05);opacity:.45}}
 body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5;background-image:radial-gradient(rgba(255,255,255,.25) .5px, transparent .5px),radial-gradient(rgba(255,255,255,.18) .5px, transparent .5px);background-size:34px 34px,34px 34px;background-position:0 0,17px 17px;mix-blend-mode:overlay}
 html[data-theme="dark"] body::after{opacity:.25}
 
@@ -123,7 +135,10 @@ html[data-theme="dark"] .actions button{border-color:rgba(255,255,255,.25)}
 </style>
 </head>
 <body>
-<div class="bg-fx"></div>
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div class="blob blob-3"></div>
+<div class="blob blob-4"></div>
 <div class="topbar">
   <div class="topbar-title" data-zh="SKU 路径查询" data-en="SKU Path Search">SKU 路径查询</div>
   <div class="controls">
