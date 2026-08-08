@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <radialGradient id="g" cx="35%" cy="30%" r="80%">
+      <stop offset="0%" stop-color="#3a3a3f"/>
+      <stop offset="100%" stop-color="#111113"/>
+    </radialGradient>
+  </defs>
+  <!-- 圆形玻璃底 -->
+  <circle cx="32" cy="32" r="30" fill="url(#g)"/>
+  <circle cx="32" cy="32" r="30" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="1.5"/>
+  <!-- 顶部高光 (液态玻璃) -->
+  <ellipse cx="24" cy="16" rx="14" ry="7" fill="rgba(255,255,255,.18)"/>
+  <!-- 放大镜 -->
+  <g stroke="#ffffff" stroke-width="4.5" fill="none" stroke-linecap="round">
+    <circle cx="30" cy="30" r="12"/>
+    <line x1="39" y1="39" x2="49" y2="49"/>
+  </g>
+</svg>
