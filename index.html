@@ -446,9 +446,9 @@ window.addEventListener('DOMContentLoaded', function(){
   }
   var pos = 0, last = Date.now(), speed = 0.8, paused = false, half = 0, raf = null;
   function update(){
+    var now = Date.now(), dt = now - last;
+    last = now;                        // 始终更新时间基准（暂停时不累加 pos）
     if (!paused){
-      var now = Date.now(), dt = now - last;
-      last = now;
       pos += speed * dt / 16.67;
       if (half && pos >= half) pos -= half;
       track.style.transform = 'translateX(' + (-pos) + 'px)';
