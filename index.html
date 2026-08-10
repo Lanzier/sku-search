@@ -405,8 +405,27 @@ window.addEventListener('DOMContentLoaded', function(){
   if (!bar) return;
   var track = document.getElementById('adTrack');
   if (!track) return;
-  // 克隆内容为两份（字节级相同，保证无缝）
-  track.innerHTML = track.innerHTML + track.innerHTML;
+  var once1 = track.innerHTML;              // 单份内容
+  var n = 1, single = 0;
+  // 克隆 content 直到总宽 >= 视口宽 * 3，保证永不露白
+  function ensureWide(){
+    var w = bar.clientWidth || Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+    // 先量单份宽度
+    if (!single){
+      var c = track.cloneNode(true);
+      c.style.position = 'absolute'; c.style.left = '-99999px'; c.style.visibility = 'hidden';
+      document.body.appendChild(c);
+      single = c.scrollWidth;
+      document.body.removeChild(c);
+    }
+    // 持续克隆直到 track 足够宽
+    var tries = 0;
+    while (track.scrollWidth < w * 3 && tries < 12){
+      track.innerHTML += once1; n++;
+      tries++;
+    }
+    half = single || (track.scrollWidth / n);
+  }
   var pos = 0, last = Date.now(), speed = 0.8, paused = false, half = 0, raf = null;
   function update(){
     if (!paused){
@@ -419,10 +438,9 @@ window.addEventListener('DOMContentLoaded', function(){
     raf = requestAnimationFrame(update);
   }
   function reset(){
-    // 克隆后 scrollWidth/2 恰是单份宽度（两份完全一致）
-    half = track.scrollWidth / 2;
+    ensureWide();
     pos = 0;
-    if (half > 0) track.style.transform = 'translateX(0)';
+    track.style.transform = 'translateX(0)';
   }
   bar.addEventListener('mouseenter', function(){ paused = true; });
   bar.addEventListener('mouseleave', function(){ paused = false; });
