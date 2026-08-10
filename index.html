@@ -49,6 +49,7 @@ html[data-theme="dark"]{
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
+body{padding-bottom:52px}
 body{
   font-family:'Segoe UI',system-ui,-apple-system,'PingFang SC','Microsoft YaHei','微软雅黑',sans-serif;
   color:var(--text);background:var(--body-bg,#111);overflow-x:hidden;
@@ -205,6 +206,29 @@ html[data-theme="dark"] .modal textarea,html[data-theme="dark"] .modal input{bac
 }
 .site-btn:hover{color:var(--text)}
 .site-btn.active{background:var(--btn-primary-bg);color:var(--btn-primary-text);border-color:var(--btn-primary-bg);box-shadow:0 4px 14px rgba(0,0,0,.18)}
+
+
+/* ===== 底部广告滚动条 ===== */
+.ad-bar{
+  position:fixed;bottom:0;left:0;right:0;z-index:1500;overflow:hidden;
+  background:linear-gradient(90deg,#111617,#1d2126,#111617);
+  border-top:1px solid var(--glass-border);
+  padding:10px 0;
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+}
+html[data-theme="light"] .ad-bar{background:linear-gradient(90deg,#1a1d21,#2a2e33,#1a1d21)}
+.ad-track{
+  display:inline-flex;align-items:center;white-space:nowrap;
+  animation:adScroll 22s linear infinite;
+  will-change:transform;
+}
+.ad-bar:hover .ad-track{animation-play-state:paused}
+.ad-item{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#e8eaed;padding:0 30px;white-space:nowrap;font-weight:500}
+html[data-theme="light"] .ad-item{color:#fff}
+.ad-item a{color:#5ec89b;text-decoration:none;font-weight:600;margin:0 3px}
+.ad-item a:hover{text-decoration:underline}
+.ad-sep{color:rgba(255,255,255,.3);font-size:13px;padding:0 18px}
+@keyframes adScroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 
 </style>
 </head>
@@ -391,6 +415,24 @@ applyLang();applyTheme();
       <button class="modal-cancel" onclick="closeFeedback()"><span data-zh="取消" data-en="Cancel">取消</span></button>
       <button class="modal-send" onclick="sendFeedback()">📧 <span data-zh="提交" data-en="Submit">提交</span></button>
     </div>
+  </div>
+</div>
+
+
+<!-- 底部广告滚动条 -->
+<div class="ad-bar">
+  <div class="ad-track">
+    <span class="ad-item">🚀 <span data-zh="访问" data-en="Visit">访问</span> <a href="https://lanzier.github.io/" target="_blank" rel="noopener">ZierClaw 官网</a></span>
+    <span class="ad-sep">·</span>
+    <span class="ad-item">📚 <span data-zh="跟我学" data-en="Learn with me">跟我学</span> AI 提效——<span data-zh="从零到会搭工具" data-en="from zero to tools">从零到会搭工具</span></span>
+    <span class="ad-sep">·</span>
+    <span class="ad-item">📧 <span data-zh="课程咨询" data-en="Course inquiry">课程咨询</span>：<a href="mailto:taobaozhou666@gmail.com">taobaozhou666@gmail.com</a></span>
+    <!-- 复制一份实现无缝滚动 -->
+    <span class="ad-item">🚀 <span data-zh="访问" data-en="Visit">访问</span> <a href="https://lanzier.github.io/" target="_blank" rel="noopener">ZierClaw 官网</a></span>
+    <span class="ad-sep">·</span>
+    <span class="ad-item">📚 <span data-zh="跟我学" data-en="Learn with me">跟我学</span> AI 提效——<span data-zh="从零到会搭工具" data-en="from zero to tools">从零到会搭工具</span></span>
+    <span class="ad-sep">·</span>
+    <span class="ad-item">📧 <span data-zh="课程咨询" data-en="Course inquiry">课程咨询</span>：<a href="mailto:taobaozhou666@gmail.com">taobaozhou666@gmail.com</a></span>
   </div>
 </div>
 
