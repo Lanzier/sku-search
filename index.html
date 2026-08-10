@@ -195,6 +195,17 @@ html[data-theme="dark"] .modal textarea,html[data-theme="dark"] .modal input{bac
 .confirm .c-no{background:var(--glass);border:1px solid var(--glass-border)!important;color:var(--text)}
 .confirm .c-yes{background:var(--btn-primary-bg);color:var(--btn-primary-text)}
 
+
+/* 站点筛选 */
+.site-filter{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:0 auto 12px;max-width:640px}
+.site-btn{
+  padding:8px 20px;border-radius:999px;border:1px solid var(--glass-border);cursor:pointer;font-size:13px;font-weight:600;
+  background:var(--glass);-webkit-backdrop-filter:blur(16px) saturate(160%);backdrop-filter:blur(16px) saturate(160%);
+  color:var(--text-sub);font-family:inherit;box-shadow:var(--glass-hi);transition:all .2s ease;
+}
+.site-btn:hover{color:var(--text)}
+.site-btn.active{background:var(--btn-primary-bg);color:var(--btn-primary-text);border-color:var(--btn-primary-bg);box-shadow:0 4px 14px rgba(0,0,0,.18)}
+
 </style>
 </head>
 <body>
@@ -222,6 +233,13 @@ html[data-theme="dark"] .modal textarea,html[data-theme="dark"] .modal input{bac
       <button class="search-btn" onclick="doSearch()"><span data-zh="搜索" data-en="Search">搜索</span></button>
     </div>
   </div>
+
+  <div class="site-filter" id="siteFilter">
+    <button class="site-btn active" data-site="all" onclick="setSite('all')"><span class="lang" data-zh="全部" data-en="All">全部</span></button>
+    <button class="site-btn" data-site="US" onclick="setSite('US')"><span class="lang" data-zh="美国" data-en="US">美国</span></button>
+    <button class="site-btn" data-site="DE" onclick="setSite('DE')"><span class="lang" data-zh="德国" data-en="DE">德国</span></button>
+  </div>
+
   <div class="quick">
     <button class="chip" onclick="setQ('3012')">3012</button>
     <button class="chip" onclick="setQ('RHL1000')">RHL1000</button>
@@ -278,10 +296,16 @@ function showConfirm(msg, onYes){
   m.classList.add('show');
 }
 
-let INDEX=null, lang='zh';
+let INDEX=null, lang='zh', siteFilter='all';
 const el={q:document.getElementById('q'),count:document.getElementById('count'),built:document.getElementById('built'),meta:document.getElementById('meta'),results:document.getElementById('results')};
 el.q.addEventListener('keydown',e=>{if(e.key==='Enter')doSearch();});
 function setQ(v){el.q.value=v;doSearch();}
+function setSite(s){
+  siteFilter=s;
+  var btns=document.querySelectorAll('.site-btn');
+  btns.forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-site')===s); });
+  if(el.q.value.trim()) doSearch();
+}
 
 function applyLang(){
   lang=document.documentElement.getAttribute('data-lang')||'zh';
@@ -310,8 +334,8 @@ function doSearch(){
   if(!INDEX){el.meta.textContent=lang==='zh'?'索引未加载，请稍候':'Index loading…';return;}
   if(!q){el.results.innerHTML='';el.meta.textContent='';return;}
   const needle=q.toUpperCase(),all=[];
-  (INDEX.dirs||[]).forEach(d=>all.push({name:d.name,path:d.path,type:'dir'}));
-  (INDEX.files||[]).forEach(f=>all.push({name:f.name,path:f.path,type:'file'}));
+  (INDEX.dirs||[]).forEach(function(d){ if(siteFilter==='all'||d.site===siteFilter) all.push({name:d.name,path:d.path,type:'dir',site:d.site}); });
+  (INDEX.files||[]).forEach(function(f){ if(siteFilter==='all'||f.site===siteFilter) all.push({name:f.name,path:f.path,type:'file',site:f.site}); });
   const exact=[],prefix=[],contain=[];
   for(const e of all){const n=(e.name||'').toUpperCase();if(n===needle)exact.push(e);else if(n.startsWith(needle))prefix.push(e);else if(n.includes(needle))contain.push(e);}
   const data=[...exact.slice(0,30),...prefix.slice(0,60),...contain.slice(0,60)];
