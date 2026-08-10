@@ -403,29 +403,31 @@ function sendFeedback(){
 window.addEventListener('DOMContentLoaded', function(){
   var bar = document.querySelector('.ad-bar');
   if (!bar) return;
-  var track = bar.querySelector('.ad-track');
+  var track = document.getElementById('adTrack');
   if (!track) return;
-  var pos = 0, last = 0, speed = 0.8, paused = false, half = 0, raf = null;
+  // 克隆内容为两份（字节级相同，保证无缝）
+  track.innerHTML = track.innerHTML + track.innerHTML;
+  var pos = 0, last = Date.now(), speed = 0.8, paused = false, half = 0, raf = null;
   function update(){
     if (!paused){
       var now = Date.now(), dt = now - last;
       last = now;
-      pos += speed * dt / 16.67;  // 速率归一化到 60fps
-      if (half && pos >= half) pos -= half;   // 无缝复位
+      pos += speed * dt / 16.67;
+      if (half && pos >= half) pos -= half;
       track.style.transform = 'translateX(' + (-pos) + 'px)';
     }
     raf = requestAnimationFrame(update);
   }
   function reset(){
-    half = track.scrollWidth / 2;   // 第一份内容的宽度
+    // 克隆后 scrollWidth/2 恰是单份宽度（两份完全一致）
+    half = track.scrollWidth / 2;
     pos = 0;
-    track.style.transform = 'translateX(0)';
+    if (half > 0) track.style.transform = 'translateX(0)';
   }
   bar.addEventListener('mouseenter', function(){ paused = true; });
   bar.addEventListener('mouseleave', function(){ paused = false; });
   window.addEventListener('resize', reset);
   reset();
-  // 等内容加载/语言切换后重新量宽
   setTimeout(reset, 300);
   setTimeout(reset, 1500);
   raf = requestAnimationFrame(update);
@@ -449,15 +451,9 @@ applyLang();applyTheme();
 </div>
 
 
-<!-- 底部广告滚动条 -->
+<!-- 底部广告滚动条（内容一份，JS克隆成两份实现无缝） -->
 <div class="ad-bar">
-  <div class="ad-track">
-    <span class="ad-item">🚀 <span data-zh="访问" data-en="Visit">访问</span> <a href="https://lanzier.github.io/" target="_blank" rel="noopener">ZierClaw 官网</a></span>
-    <span class="ad-sep">·</span>
-    <span class="ad-item">📚 <span data-zh="跟我学" data-en="Learn with me">跟我学</span> AI 提效——<span data-zh="从零到会搭工具" data-en="from zero to tools">从零到会搭工具</span></span>
-    <span class="ad-sep">·</span>
-    <span class="ad-item">📧 <span data-zh="课程咨询" data-en="Course inquiry">课程咨询</span>：<a href="mailto:taobaozhou666@gmail.com">taobaozhou666@gmail.com</a></span>
-    <!-- 复制一份实现无缝滚动 -->
+  <div class="ad-track" id="adTrack">
     <span class="ad-item">🚀 <span data-zh="访问" data-en="Visit">访问</span> <a href="https://lanzier.github.io/" target="_blank" rel="noopener">ZierClaw 官网</a></span>
     <span class="ad-sep">·</span>
     <span class="ad-item">📚 <span data-zh="跟我学" data-en="Learn with me">跟我学</span> AI 提效——<span data-zh="从零到会搭工具" data-en="from zero to tools">从零到会搭工具</span></span>
