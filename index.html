@@ -219,16 +219,13 @@ html[data-theme="dark"] .modal textarea,html[data-theme="dark"] .modal input{bac
 html[data-theme="light"] .ad-bar{background:linear-gradient(90deg,#1a1d21,#2a2e33,#1a1d21)}
 .ad-track{
   display:inline-flex;align-items:center;white-space:nowrap;
-  animation:adScroll 22s linear infinite;
   will-change:transform;
 }
-.ad-bar:hover .ad-track{animation-play-state:paused}
 .ad-item{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#e8eaed;padding:0 30px;white-space:nowrap;font-weight:500}
 html[data-theme="light"] .ad-item{color:#fff}
 .ad-item a{color:#5ec89b;text-decoration:none;font-weight:600;margin:0 3px}
 .ad-item a:hover{text-decoration:underline}
 .ad-sep{color:rgba(255,255,255,.3);font-size:13px;padding:0 18px}
-@keyframes adScroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 
 </style>
 </head>
@@ -400,6 +397,39 @@ function sendFeedback(){
     .catch(function(e){ showToast(lang==='zh'?'发送失败，请重试或直接联系管理员。':'Send failed, please retry or contact admin.','error'); })
     .finally(function(){ if(btn){ btn.disabled=false; btn.textContent='📧 '+(lang==='zh'?'提交':'Submit'); } });
 }
+
+
+/* ===== 广告条 JS 无缝滚动 ===== */
+(function(){
+  var bar = document.querySelector('.ad-bar');
+  if (!bar) return;
+  var track = bar.querySelector('.ad-track');
+  if (!track) return;
+  var pos = 0, last = 0, speed = 0.8, paused = false, half = 0, raf = null;
+  function update(){
+    if (!paused){
+      var now = Date.now(), dt = now - last;
+      last = now;
+      pos += speed * dt / 16.67;  // 速率归一化到 60fps
+      if (half && pos >= half) pos -= half;   // 无缝复位
+      track.style.transform = 'translateX(' + (-pos) + 'px)';
+    }
+    raf = requestAnimationFrame(update);
+  }
+  function reset(){
+    half = track.scrollWidth / 2;   // 第一份内容的宽度
+    pos = 0;
+    track.style.transform = 'translateX(0)';
+  }
+  bar.addEventListener('mouseenter', function(){ paused = true; });
+  bar.addEventListener('mouseleave', function(){ paused = false; });
+  window.addEventListener('resize', reset);
+  reset();
+  // 等内容加载/语言切换后重新量宽
+  setTimeout(reset, 300);
+  setTimeout(reset, 1500);
+  raf = requestAnimationFrame(update);
+})();
 
 applyLang();applyTheme();
 </script>
