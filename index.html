@@ -288,6 +288,24 @@ html[data-theme="light"] .ad-item{color:#fff}
 <script>
 
 /* ===== 自定义 Toast 提示（替代浏览器 alert） ===== */
+
+function copyEmail(e){
+  if(e){ e.preventDefault(); e.stopPropagation(); }
+  var email = 'taobaozhou666@gmail.com';
+  function done(){ showToast(lang==='zh' ? ('已复制邮箱: '+email) : ('Email copied: '+email), 'success'); }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(email).then(done).catch(function(){ fallbackCopy(email, done); });
+  } else fallbackCopy(email, done);
+}
+function fallbackCopy(text, cb){
+  try {
+    var ta=document.createElement('textarea'); ta.value=text;
+    ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    if(cb)cb();
+  } catch(err){ alert('复制失败'); }
+}
+
 function showToast(msg, type){
   type = type || 'info';
   var wrap = document.getElementById('toastWrap');
@@ -476,7 +494,7 @@ applyLang();applyTheme();
     <span class="ad-sep">·</span>
     <span class="ad-item">📚 <span data-zh="跟我学" data-en="Learn with me">跟我学</span> AI 提效——<span data-zh="从零到会搭工具" data-en="from zero to tools">从零到会搭工具</span></span>
     <span class="ad-sep">·</span>
-    <span class="ad-item">📧 <span data-zh="课程咨询" data-en="Course inquiry">课程咨询</span>：<a href="mailto:taobaozhou666@gmail.com">taobaozhou666@gmail.com</a></span>
+    <span class="ad-item">📧 <span data-zh="课程咨询" data-en="Course inquiry">课程咨询</span>：<a href="javascript:void(0)" class="ad-mail" onclick="copyEmail(event)">taobaozhou666@gmail.com</a></span>
   </div>
 </div>
 
