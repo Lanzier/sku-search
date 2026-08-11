@@ -388,7 +388,29 @@ function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').repl
 function escAttr(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
 function copyPath(btn,p){const dm=lang==='zh'?'已复制 ✓':'Copied ✓',em=lang==='zh'?'复制失败':'Copy failed';function fb(){try{const ta=document.createElement('textarea');ta.value=p;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);flash(btn,dm,'done');}catch(e){flash(btn,em,'err',2500);}}if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(p).then(()=>flash(btn,dm,'done')).catch(fb);else fb();}
-function openPath(btn,p){const bm=lang==='zh'?'打开中…':'Opening…',dm=lang==='zh'?'已打开 ✓':'Opened ✓';const pu='sku-open://open?path='+encodeURIComponent(p);try{const iframe=document.createElement('iframe');iframe.style.display='none';iframe.src=pu;document.body.appendChild(iframe);flash(btn,bm,'busy',0);setTimeout(()=>flash(btn,dm,'done',0),1300);setTimeout(()=>flash(btn,null,'',0),2900);iframe.addEventListener('load',()=>setTimeout(()=>document.body.removeChild(iframe),2000));setTimeout(()=>{if(!window.__skuOpenInstalled){if(!window.__skuOpenAsked){window.__skuOpenAsked=true;showConfirm(lang==='zh'?'正在尝试打开文件。如果没反应，说明还没安装打开脚本。<br>需要现在安装打开脚本吗？（仅需安装一次）':'Trying to open… If nothing happens, the opener is not installed.<br>Install now? (once)',function(){window.location.href='./sku-open-installer-v2.zip';});}}},1500);}catch(e){showToast('打开失败: '+e.message,'error');}}
+function openPath(btn,p){const bm=lang==='zh'?'打开中…':'Opening…',dm=lang==='zh'?'已打开 ✓':'Opened ✓';const pu='sku-open://open?path='+encodeURIComponent(p);try{const iframe=document.createElement('iframe');iframe.style.display='none';iframe.src=pu;document.body.appendChild(iframe);flash(btn,bm,'busy',0);setTimeout(()=>flash(btn,dm,'done',0),1300);setTimeout(()=>flash(btn,null,'',0),2900);iframe.addEventListener('load',()=>setTimeout(()=>document.body.removeChild(iframe),2000));setTimeout(function(){
+  // 用 localStorage 记住"已安装打开脚本"（刷新页面也不会再弹）
+  if(localStorage.getItem('sku_open_installed')!=='1'){
+    if(!window.__skuOpenAsked){
+      window.__skuOpenAsked=true;
+      showConfirm(lang==='zh'
+        ? '正在尝试打开文件。如果你已安装过打开脚本，请点「确定」继续（之后不再提示）；若还没装，点「去安装」。'
+        : 'Trying to open. If the opener is installed, click OK to continue (won't ask again); otherwise click Install.',
+        function(){ localStorage.setItem('sku_open_installed','1'); }  // 确定=已装,记下不再弹
+      );
+      // 给 confirm 加一个"去安装"按钮
+      var mm=document.getElementById('confirmMask');
+      if(mm){
+        var yes=mm.querySelector('.c-yes');
+        yes.textContent = (lang==='zh'?'确定':'OK');
+        // 把".c-no"改为"去安装"（下载）
+        var no=mm.querySelector('.c-no');
+        no.textContent = (lang==='zh'?'去安装':'Install');
+        no.onclick=function(){ mm.classList.remove('show'); window.location.href='./sku-open-installer-v2.zip'; };
+      }
+    }
+  }
+},1500);}catch(e){showToast('打开失败: '+e.message,'error');}}
 function flash(btn,msg,state,duration){duration=(duration==null)?1500:duration;const te=btn.querySelector('.btntext');const setState=()=>{btn.classList.remove('state-done','state-busy','state-err','pulse-pop');if(state==='done')btn.classList.add('state-done');else if(state==='busy')btn.classList.add('state-busy');else if(state==='err')btn.classList.add('state-err');};const change=(html,cb)=>{btn.classList.add('fade-out');setTimeout(()=>{te.innerHTML=html;btn.classList.remove('fade-out');btn.classList.add('fade-in');btn.classList.add('pulse-pop');setTimeout(()=>btn.classList.remove('fade-in'),250);if(cb)cb();},180);};const restore=()=>{const orig=btn.classList.contains('act-copy')?(lang==='zh'?'复制':'Copy'):(lang==='zh'?'打开':'Open');btn.classList.add('fade-out');setTimeout(()=>{te.textContent=orig;btn.classList.remove('fade-out');btn.classList.add('fade-in');setTimeout(()=>btn.classList.remove('fade-in'),250);btn.classList.remove('state-done','state-busy','state-err','pulse-pop');},180);};if(msg===null){restore();return;}if(state==='busy'){setState();change('<span class="spinner"></span>'+msg);}else if(state==='done'||state==='err'){setState();change(msg);}if(duration>0)setTimeout(restore,duration);}
 document.getElementById('results').addEventListener('click',function(e){const btn=e.target.closest('button');if(!btn)return;const item=btn.closest('.item');if(!item)return;const p=item.getAttribute('data-path');if(!p)return;if(btn.classList.contains('act-copy'))copyPath(btn,p);else if(btn.classList.contains('act-open'))openPath(btn,p);});
 
