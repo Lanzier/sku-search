@@ -395,7 +395,7 @@ function openPath(btn,p){const bm=lang==='zh'?'打开中…':'Opening…',dm=lan
       window.__skuOpenAsked=true;
       showConfirm(lang==='zh'
         ? '正在尝试打开文件。如果你已安装过打开脚本，请点「确定」继续（之后不再提示）；若还没装，点「去安装」。'
-        : 'Trying to open. If the opener is installed, click OK to continue (won't ask again); otherwise click Install.',
+        : 'Trying to open. If the opener is installed, click OK to continue (no more prompts); otherwise click Install.',
         function(){ localStorage.setItem('sku_open_installed','1'); }  // 确定=已装,记下不再弹
       );
       // 给 confirm 加一个"去安装"按钮
