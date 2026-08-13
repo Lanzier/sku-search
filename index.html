@@ -618,12 +618,11 @@ applyLang();applyTheme();
       setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); },dur*1000);
     }
     if(interval){ clearInterval(interval); interval=null; }
-    spawnOne(); spawnOne(); spawnOne();
+    // 错峰: 首条立即, 其余逐条(1.2s)自然补入, 刷新后不瞬间铺满
+    spawnOne();
+    var initN=1;
+    var initTimer=setInterval(function(){ spawnOne(); if(++initN>=4){ clearInterval(initTimer); } }, 1200);
     interval=setInterval(spawnOne, 1000);
-
-    if(interval){ clearInterval(interval); interval=null; }
-    spawnOne(); spawnOne();
-    interval=setInterval(spawnOne, 3200);
   }
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
   window.openMsgBox=function(){
