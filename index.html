@@ -592,29 +592,34 @@ applyLang();applyTheme();
     stage.innerHTML='';
 
     var seq=0;
+    // 轨道: 舞台高120px, 每行约19px, 5条轨道不重叠
+    var RLANES=[6,28,50,72,94];
+    var rFreeAt=[0,0,0,0,0];
     function spawnOne(){
       if(!msgs.length)return;
-      // 无序: 随机抽取文案(不按数组顺序); 仅首次填充前3条按导入顺序首次展示
       var m;
-      if(seq<msgs.length && seq<3){ m=msgs[seq]; } // 首次前3条跟随导入顺序
-      else { m=msgs[Math.floor(Math.random()*msgs.length)]; } // 其余无序随机
+      if(seq<3){ m=msgs[seq]; }
+      else { m=msgs[Math.floor(Math.random()*msgs.length)]; }
       seq++;
+      var now=Date.now();
+      var lane=-1;
+      var order=[0,1,2,3,4].sort(function(){return Math.random()-0.5;});
+      for(var i=0;i<order.length;i++){ var L=order[i]; if(rFreeAt[L]<=now){lane=L;break;} }
+      if(lane<0) return; // 全忙则跳过, 宁缺毋滥不重叠
+      var dur=5+Math.random()*2;
+      rFreeAt[lane]=now+dur*1000;
       var el=document.createElement('div');
       el.className='fb-dm';
       el.innerHTML = (m.who && m.who!=='匿名') ? ('<b>'+esc(m.who)+':</b> '+esc(m.txt)) : esc(m.txt);
-      var top=6+Math.random()*90;
-      el.style.top=top+'px';
-      // 连续: 去delay(或极小), 每条独立滑过, duration按舞台宽度动态
-      var dur=(8+Math.random()*4);
+      el.style.top=RLANES[lane]+'px';
       el.style.animationDuration=dur+'s';
       el.style.animationDelay='0s';
       stage.appendChild(el);
       setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); },dur*1000);
     }
     if(interval){ clearInterval(interval); interval=null; }
-    // 连续: 一开始铺 3 条(首3条顺序), 之后每 1.5s 随机加一条
     spawnOne(); spawnOne(); spawnOne();
-    interval=setInterval(spawnOne, 1500);
+    interval=setInterval(spawnOne, 1000);
 
     if(interval){ clearInterval(interval); interval=null; }
     spawnOne(); spawnOne();
