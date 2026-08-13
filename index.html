@@ -590,22 +590,32 @@ applyLang();applyTheme();
     }
     var l2=document.getElementById('fbList'); if(l2) l2.style.display='none';
     stage.innerHTML='';
-    var curIdx=0;
+
+    var seq=0;
     function spawnOne(){
       if(!msgs.length)return;
-      var m=msgs[curIdx%msgs.length]; curIdx++;
+      // 无序: 随机抽取文案(不按数组顺序); 仅首次填充前3条按导入顺序首次展示
+      var m;
+      if(seq<msgs.length && seq<3){ m=msgs[seq]; } // 首次前3条跟随导入顺序
+      else { m=msgs[Math.floor(Math.random()*msgs.length)]; } // 其余无序随机
+      seq++;
       var el=document.createElement('div');
       el.className='fb-dm';
       el.innerHTML = (m.who && m.who!=='匿名') ? ('<b>'+esc(m.who)+':</b> '+esc(m.txt)) : esc(m.txt);
       var top=6+Math.random()*90;
       el.style.top=top+'px';
-      var dur=6+Math.random()*5;
+      // 连续: 去delay(或极小), 每条独立滑过, duration按舞台宽度动态
+      var dur=(8+Math.random()*4);
       el.style.animationDuration=dur+'s';
-      var delay=Math.random()*3;
-      el.style.animationDelay=delay+'s';
+      el.style.animationDelay='0s';
       stage.appendChild(el);
-      setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); },(dur+delay)*1000);
+      setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); },dur*1000);
     }
+    if(interval){ clearInterval(interval); interval=null; }
+    // 连续: 一开始铺 3 条(首3条顺序), 之后每 1.5s 随机加一条
+    spawnOne(); spawnOne(); spawnOne();
+    interval=setInterval(spawnOne, 1500);
+
     if(interval){ clearInterval(interval); interval=null; }
     spawnOne(); spawnOne();
     interval=setInterval(spawnOne, 3200);
