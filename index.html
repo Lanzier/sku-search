@@ -427,7 +427,7 @@ function sendFeedback(){
   if(!text){ showToast(lang==='zh'?'请写点什么再提交 ^_^':'Please write something first ^_^','error'); return; }
   var btn=document.querySelector('.modal-send');
   if(btn){ btn.disabled=true; btn.textContent= lang==='zh'?'提交中…':'Sending…'; }
-  var payload={ _subject:'[SKU工具] 反馈/建议', message:text, email:(email||'匿名') };
+  var payload={ _subject:'[SKU工具] 反馈/建议', message:text, email:(email||'anonymous@formspree.io') };
   fetch('https://formspree.io/f/'+FORMSPREE_ID,{
     method:'POST', headers:{'Accept':'application/json','Content-Type':'application/json'},
     body:JSON.stringify(payload)
