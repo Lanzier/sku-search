@@ -88,11 +88,12 @@ html[data-theme="dark"] body::after{opacity:.25}
 .hero .sub{font-size:15px;color:var(--text-sub);margin-top:10px}
 
 /* 搜索玻璃 */
-.search-wrap{max-width:580px;margin:0 auto 32px}
-.searchbox{display:flex;align-items:center;padding:6px;border-radius:20px;background:var(--glass);-webkit-backdrop-filter:blur(30px) saturate(180%);backdrop-filter:blur(30px) saturate(180%);border:1px solid var(--glass-border);box-shadow:var(--glass-hi),var(--glass-shadow)}
+.search-wrap{max-width:820px;margin:0 auto 32px;display:flex;gap:14px;align-items:stretch}
+.searchbox{flex:1;display:flex;align-items:center;padding:6px;border-radius:20px;background:var(--glass);-webkit-backdrop-filter:blur(30px) saturate(180%);backdrop-filter:blur(30px) saturate(180%);border:1px solid var(--glass-border);box-shadow:var(--glass-hi),var(--glass-shadow)}
 #q{flex:1;padding:15px 18px;font-size:16px;color:var(--text);background:transparent;border:none;outline:none;font-family:inherit}
 #q::placeholder{color:var(--text-sub)}
-button.search-btn{padding:12px 26px;border:none;border-radius:14px;cursor:pointer;font-size:15px;font-weight:500;background:var(--btn-primary-bg);color:var(--btn-primary-text);transition:transform .15s ease,opacity .2s;font-family:inherit}
+button.fb-board{width:200px;flex-shrink:0;display:flex;flex-direction:column;border-radius:16px;background:var(--glass);-webkit-backdrop-filter:blur(30px) saturate(180%);backdrop-filter:blur(30px) saturate(180%);border:1px solid var(--border);padding:10px 12px;overflow:hidden}.fb-title{font-size:13px;font-weight:600;color:var(--accent);margin-bottom:6px}.fb-list{flex:1;overflow:hidden;position:relative;height:120px;min-height:120px}.fb-item{font-size:12px;color:var(--text);padding:5px 0;border-bottom:1px dashed var(--border);line-height:1.4}.fb-item b{color:var(--accent)}.fb-item .fb-txt{color:var(--text-muted)}.fb-empty{color:var(--text-muted);font-size:12px;text-align:center;padding:20px 0}.fb-anim{animation:fbScroll linear infinite}@keyframes fbScroll{0%{transform:translateY(0)}100%{transform:translateY(calc(-100% + 120px))}}.fb-add{margin-top:8px;padding:7px 10px;border:none;border-radius:10px;cursor:pointer;font-size:12px;font-weight:500;background:var(--btn-primary-bg);color:var(--btn-primary-text);transition:transform .15s ease}.fb-add:hover{transform:scale(1.03)}.msg-modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:99}.msg-modal.show{display:flex}.msg-box{background:var(--card-bg);border:1px solid var(--border);border-radius:16px;padding:20px;width:90%;max-width:420px}.msg-box h3{margin-bottom:12px;font-size:16px}.msg-box input,.msg-box textarea{width:100%;padding:9px 12px;margin-bottom:10px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:14px;box-sizing:border-box}.msg-box textarea{resize:vertical;min-height:80px}.msg-row{display:flex;gap:10px;justify-content:flex-end;margin-top:6px}.msg-row button{padding:8px 18px;border:none;border-radius:10px;cursor:pointer;font-size:14px}.msg-cancel{background:var(--border);color:var(--text)}.msg-send{background:var(--btn-primary-bg);color:var(--btn-primary-text);font-weight:600}@media(max-width:640px){.search-wrap{flex-direction:column}.fb-board{width:100%;max-height:180px}}
+.search-btn{padding:12px 26px;border:none;border-radius:14px;cursor:pointer;font-size:15px;font-weight:500;background:var(--btn-primary-bg);color:var(--btn-primary-text);transition:transform .15s ease,opacity .2s;font-family:inherit}
 button.search-btn:hover{opacity:.88}
 button.search-btn:active{transform:scale(.95)}
 
@@ -250,6 +251,11 @@ html[data-theme="light"] .ad-item{color:#fff}
   </div>
 
   <div class="search-wrap">
+    <div class="fb-board" id="fbBoard">
+      <div class="fb-title">💬 <span data-zh="滚动留言" data-en="Messages">滚动留言</span></div>
+      <div class="fb-list" id="fbList"><div class="fb-empty"><span data-zh="还没有留言，来抢沙发~" data-en="No messages yet. Be the first!">还没有留言，来抢沙发~</span></div></div>
+      <button class="fb-add" onclick="openMsgBox()">✍️ <span data-zh="我也要留言" data-en="Leave a message">我也要留言</span></button>
+    </div>
     <div class="searchbox">
       <input id="q" data-zh="输入 SKU / 编号 / 别名，如 3012 或 RHL1000" data-en="Enter SKU / code / alias, e.g. 3012 or RHL1000" placeholder="输入 SKU / 编号 / 别名，如 3012 或 RHL1000" autofocus>
       <button class="search-btn" onclick="doSearch()"><span data-zh="搜索" data-en="Search">搜索</span></button>
@@ -519,5 +525,95 @@ applyLang();applyTheme();
   </div>
 </div>
 
+
+
+<!-- 留言弹窗 -->
+<div class="msg-modal" id="msgModal">
+  <div class="msg-box">
+    <h3>💬 <span data-zh="我也要留言" data-en="Leave a message">我也要留言</span></h3>
+    <input id="msgName" placeholder="昵称(可选)">
+    <textarea id="msgText" placeholder="写点想说的，会展示在滚动留言板~" style="min-height:70px"></textarea>
+    <div class="msg-row">
+      <button class="msg-cancel" onclick="closeMsgBox()"><span data-zh="取消" data-en="Cancel">取消</span></button>
+      <button class="msg-send" id="sendMsgBtn" onclick="sendMsg()">📮 <span data-zh="发布" data-en="Post">发布</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 滚动留言板 JS ===== -->
+<script>
+(function(){
+  var DB_URL='https://zier-sku-search-default-rtdb.firebaseio.com';
+  var FB_KEY='PHFYH1Q6LVSMUB1N0LDJXEDYD7LU37O0PSMBC5EU';
+  var list=null, msgs=[], timer=null, posIdx=0;
+  function $(id){return document.getElementById(id);}
+  function init(){
+    list=$('fbList');
+    loadMsgs();
+    // 每 20 秒刷新一次留言(共享更新)
+    setInterval(loadMsgs, 20000);
+  }
+  function loadMsgs(){
+    fetch(DB_URL+'/messages.json')
+      .then(function(r){if(!r.ok)throw 0;return r.json();})
+      .then(function(data){
+        if(!data){ render([]); return; }
+        var arr=Object.keys(data).map(function(k){ var m=data[k]; return {txt:m.text||'', who:m.name||'匿名', t:m.t||0}; });
+        arr.sort(function(a,b){return (b.t||0)-(a.t||0);});
+        render(arr.slice(0,50));
+      }).catch(function(){ /* 忽略, 显示现有 */ });
+  }
+  function render(arr){
+    msgs=arr;
+    if(!list)return;
+    if(!msgs.length){ list.innerHTML='<div class="fb-empty">'+ (window.lang==='en'?'No messages yet. Be the first!':'还没有留言，来抢沙发~') +'</div>'; return; }
+    // 双份实现无缝滚动, 鼠标悬停暂停
+    var html=msgs.map(function(m,i){ return '<div class="fb-item" style="animation:no"><b>'+esc(m.who)+':</b> <span class="fb-txt">'+esc(m.txt)+'</span></div>'; }).join('');
+    list.innerHTML=html+html;
+    if(timer) clearInterval(timer);
+    // 向上滚动一行
+    var idx=0, items=list.children, step=function(){
+      if(!list)return;
+      var h=list.clientHeight||120;
+      var unit=items[0]?items[0].offsetHeight+5:0;
+      idx++;
+      var shift=idx*unit;
+      if(unit>0 && shift >= h){ idx=0; shift=0; }
+      list.style.transform='translateY('+(-shift)+'px)';
+    };
+    timer=setInterval(step, 2500);
+  }
+  function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  window.openMsgBox=function(){
+    var m=$('msgModal'); if(m) m.classList.add('show');
+    var t=$('msgName'); if(t)t.value='';
+    var x=$('msgText'); if(x){x.value='';setTimeout(function(){x.focus();},50);}
+  };
+  window.closeMsgBox=function(){
+    var m=$('msgModal'); if(m) m.classList.remove('show');
+  };
+  window.sendMsg=function(){
+    var name=$('msgName')?$('msgName').value.trim():'';
+    var txt=$('msgText')?$('msgText').value.trim():'';
+    if(!txt){ showToast&&showToast((window.lang==='en'?'Please write a message':'请写点留言内容'),'error'); return; }
+    var payload={ text:txt, name:name||'匿名', t:Date.now() };
+    var btn=$('sendMsgBtn'); if(btn){btn.disabled=true;}
+    fetch(DB_URL+'/messages.json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+      .then(function(r){if(!r.ok)throw 0;return r.json();})
+      .then(function(){
+        showToast&&showToast((window.lang==='en'?'Published! Thanks ^_^':'已上墙！谢谢 ^_^'),'success');
+        closeMsgBox(); loadMsgs();
+      })
+      .catch(function(){ showToast&&showToast((window.lang==='en'?'Failed, try again':'发送失败，再试一下'),'error'); })
+      .finally(function(){ if(btn)btn.disabled=false; });
+  };
+  // 弹窗点击遮罩关闭
+  document.addEventListener('click',function(e){
+    var m=$('msgModal'); if(m&&e.target===m) m.classList.remove('show');
+  });
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init);
+  else init();
+})();
+</script>
 </body>
 </html>
