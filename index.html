@@ -105,7 +105,7 @@ html[data-theme="dark"] body::after{opacity:.25}
   .fb-add-wrap{position:absolute;bottom:14px;left:0;right:0;text-align:center;z-index:3}
   .fb-add{pointer-events:auto!important}
   /* 左侧上方悬浮圆钮 */
-  .fb-open-btn{position:fixed;left:16px!important;top:70px!important;transform:none!important;opacity:1!important;pointer-events:auto!important;display:none!important;width:50px!important;height:50px!important;margin:0!important;z-index:110;background:var(--glass);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border:1px solid var(--glass-border);border-radius:50%;box-shadow:var(--glass-hi),0 8px 24px rgba(0,0,0,.2);color:var(--text);font-size:22px;align-items:center;justify-content:center}.fb-open-btn.active{display:flex!important}lign-items:center;justify-content:center}
+  .fb-open-btn{position:fixed;left:16px!important;top:70px!important;transform:none!important;opacity:1!important;pointer-events:auto!important;display:none!important;width:50px!important;height:50px!important;margin:0!important;z-index:110;background:var(--glass);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border:1px solid var(--glass-border);border-radius:50%;box-shadow:var(--glass-hi),0 8px 24px rgba(0,0,0,.2);color:var(--text);font-size:22px;align-items:center;justify-content:center}.fb-open-btn.active{display:flex!important}
 }
 .search-btn{padding:12px 26px;border:none;border-radius:14px;cursor:pointer;font-size:15px;font-weight:600;background:var(--glass);-webkit-backdrop-filter:blur(20px) saturate(170%);backdrop-filter:blur(20px) saturate(170%);color:var(--text);border:1px solid var(--glass-border);box-shadow:var(--glass-hi);transition:all .2s ease;font-family:inherit}
 button.search-btn:hover{transform:translateY(-1px);box-shadow:var(--glass-hi),0 8px 24px rgba(0,0,0,.12);opacity:1}
@@ -687,19 +687,16 @@ function toggleBoard(open){
 </script>
 
 <script>
-// 手机端默认收起(抽屉藏下方, 显示悬浮圆钮)
+// 默认收起留言板(所有端都收起, 点击展开按钮才展开)
 (function(){
-  function applyMobileInit(){
-    if(window.innerWidth<=640){
-      var wrap=document.querySelector(".fb-board-wrap");
-      var ob=document.getElementById("fbOpenBtn");
-      if(wrap) wrap.classList.add("fb-collapsed");
-      if(ob) ob.classList.add("active");
-    }
+  function applyInit(){
+    var wrap=document.querySelector(".fb-board-wrap");
+    var ob=document.getElementById("fbOpenBtn");
+    if(wrap) wrap.classList.add("fb-collapsed");
+    if(ob) ob.classList.add("active");
   }
-  if(document.readyState==="loading"){ document.addEventListener("DOMContentLoaded",applyMobileInit); }
-  else { applyMobileInit(); }
-  window.addEventListener("resize",function(){ if(window.innerWidth>640){ var w=document.querySelector(".fb-board-wrap"); if(w) w.classList.remove("fb-collapsed"); } });
+  if(document.readyState==="loading"){ document.addEventListener("DOMContentLoaded",applyInit); }
+  else { applyInit(); }
 })();
 </script>
 </body>
