@@ -320,6 +320,7 @@ html[data-theme="dark"] .fb-open-btn{background:rgba(255,255,255,.12);color:#fff
 </div>
 
 <script>
+function _builtDate(b){try{var d=new Date(b);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}catch(e){return (b||'').slice(0,10);}}
 
 /* ===== 自定义 Toast 提示（替代浏览器 alert） ===== */
 
@@ -386,7 +387,7 @@ function applyLang(){
   document.querySelectorAll('[data-zh]').forEach(e=>{const k=lang==='zh'?'data-zh':'data-en';const v=e.getAttribute(k);if(v!=null&&v!=='')e.textContent=v;});
   document.getElementById('langLabel').textContent=lang==='zh'?'EN':'中文';
   el.q.setAttribute('placeholder',lang==='zh'?'输入 SKU / 编号 / 别名，如 3012 或 RHL1000':'Enter SKU / code / alias, e.g. 3012 or RHL1000');
-  if(INDEX){const t=(INDEX.dirs?INDEX.dirs.length:0)+(INDEX.files?INDEX.files.length:0);el.count.textContent=lang==='zh'?('已收录 '+t+' 条SKU/文件夹'):(t+' SKU items indexed');if(INDEX.builtAt)el.built.textContent=(lang==='zh'?'索引更新于 ':'Updated ')+INDEX.builtAt.slice(0,10);}
+  if(INDEX){const t=(INDEX.dirs?INDEX.dirs.length:0)+(INDEX.files?INDEX.files.length:0);el.count.textContent=lang==='zh'?('已收录 '+t+' 条SKU/文件夹'):(t+' SKU items indexed');if(INDEX.builtAt)el.built.textContent=(lang==='zh'?'索引更新于 ':'Updated ')+_builtDate(INDEX.builtAt);}
   if(INDEX && el.q && el.q.value && el.q.value.trim()){ try{ doSearch(); }catch(e){} }
 }
 function applyTheme(){
