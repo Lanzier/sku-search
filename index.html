@@ -244,6 +244,8 @@ html[data-theme="light"] .ad-item{color:#fff}
 .ad-sep{color:rgba(255,255,255,.3);font-size:13px;padding:0 18px}
 
 html[data-theme="dark"] .fb-board,html[data-theme="dark"] .msg-box,html[data-theme="dark"] .msg-box input,html[data-theme="dark"] .msg-box textarea{background:rgba(255,255,255,.10);border-color:rgba(255,255,255,.22)}html[data-theme="dark"] .fb-dm{--dm-shadow:0 1px 4px rgba(0,0,0,.8)}
+@media(min-width:641px){.fb-board-wrap{width:350px;height:200px;min-width:280px;min-height:165px;max-width:calc(100vw - 80px);max-height:calc(100vh - 100px);resize:both;overflow:hidden}.fb-board{width:100%;height:calc(100% - 50px)}.fb-add-wrap{margin-top:10px}}
+@keyframes dmMove{from{left:100%;transform:translateX(0)}to{left:0;transform:translateX(-100%)}}
 .msg-box input{width:100%;display:block;margin:0 auto 10px;padding:9px 12px;border-radius:10px;border:1px solid var(--glass-border);background:var(--glass-soft,var(--glass));color:var(--text);font-size:14px;box-sizing:border-box;text-align:center}
 
 /* 留言板收起/展开 */
@@ -595,9 +597,31 @@ setShareHost(shareHost);applyLang();applyTheme();
   function $(id){return document.getElementById(id);}
   function init(){
     list=$('fbList');
+    initBoardResize();
     loadMsgs();
     // 每 20 秒刷新一次留言(共享更新)
     setInterval(loadMsgs, 20000);
+  }
+  function laneTop(lane){
+    var stage=document.getElementById('fbStage');
+    var room=Math.max(0,(stage?stage.clientHeight:110)-24);
+    return Math.round((room/4)*lane);
+  }
+  function updateLanePositions(){
+    var stage=document.getElementById('fbStage');if(!stage)return;
+    stage.querySelectorAll('.fb-dm[data-lane]').forEach(function(node){node.style.top=laneTop(Number(node.getAttribute('data-lane')))+'px';});
+  }
+  function initBoardResize(){
+    var wrap=document.querySelector('.fb-board-wrap');if(!wrap)return;
+    if(window.innerWidth>640){
+      try{var saved=JSON.parse(localStorage.getItem('sku_board_size')||'null');if(saved&&saved.w&&saved.h){wrap.style.width=saved.w+'px';wrap.style.height=saved.h+'px';}}catch(e){}
+    }
+    if(window.ResizeObserver){
+      new ResizeObserver(function(){
+        updateLanePositions();
+        if(window.innerWidth>640)localStorage.setItem('sku_board_size',JSON.stringify({w:Math.round(wrap.offsetWidth),h:Math.round(wrap.offsetHeight)}));
+      }).observe(wrap);
+    }
   }
   function loadMsgs(){
     fetch(DB_URL+'/messages.json')
@@ -623,7 +647,6 @@ setShareHost(shareHost);applyLang();applyTheme();
 
     var seq=0;
     // 轨道: 舞台高120px, 每行约19px, 5条轨道不重叠
-    var RLANES=[6,28,50,72,94];
     var rFreeAt=[0,0,0,0,0];
     function spawnOne(){
       if(!msgs.length)return;
@@ -641,7 +664,8 @@ setShareHost(shareHost);applyLang();applyTheme();
       var el=document.createElement('div');
       el.className='fb-dm';
       el.innerHTML = (m.who && m.who!=='匿名') ? ('<b>'+esc(m.who)+':</b> '+esc(m.txt)) : esc(m.txt);
-      el.style.top=RLANES[lane]+'px';
+      el.setAttribute('data-lane',String(lane));
+      el.style.top=laneTop(lane)+'px';
       el.style.animationDuration=dur+'s';
       el.style.animationDelay='0s';
       stage.appendChild(el);
