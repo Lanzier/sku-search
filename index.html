@@ -244,7 +244,8 @@ html[data-theme="light"] .ad-item{color:#fff}
 .ad-sep{color:rgba(255,255,255,.3);font-size:13px;padding:0 18px}
 
 html[data-theme="dark"] .fb-board,html[data-theme="dark"] .msg-box,html[data-theme="dark"] .msg-box input,html[data-theme="dark"] .msg-box textarea{background:rgba(255,255,255,.10);border-color:rgba(255,255,255,.22)}html[data-theme="dark"] .fb-dm{--dm-shadow:0 1px 4px rgba(0,0,0,.8)}
-@media(min-width:641px){.fb-board-wrap{width:350px;height:200px;min-width:280px;min-height:165px;max-width:calc(100vw - 80px);max-height:calc(100vh - 100px);resize:both;overflow:hidden}.fb-board{width:100%;height:calc(100% - 50px)}.fb-add-wrap{margin-top:10px}}
+@media(min-width:641px){.fb-board-wrap{width:350px;height:auto;min-width:280px;max-width:calc(100vw - 80px);resize:none;overflow:visible;box-shadow:none}.fb-board{width:100%;height:var(--fb-board-height,150px)}.fb-add-wrap{margin-top:10px}.fb-resize-handle{position:absolute;right:0;bottom:0;width:28px;height:28px;z-index:8;cursor:nwse-resize;touch-action:none;background:transparent}}
+.fb-dm{font-size:var(--dm-font-size,16px)}@media(max-width:640px){.fb-resize-handle{display:none!important}}
 @keyframes dmMove{from{left:100%;transform:translateX(0)}to{left:0;transform:translateX(-100%)}}
 .msg-box input{width:100%;display:block;margin:0 auto 10px;padding:9px 12px;border-radius:10px;border:1px solid var(--glass-border);background:var(--glass-soft,var(--glass));color:var(--text);font-size:14px;box-sizing:border-box;text-align:center}
 
@@ -280,7 +281,7 @@ html[data-theme="dark"] .fb-open-btn{background:rgba(255,255,255,.12);color:#fff
 <div class="fb-board-wrap">
       <div class="fb-board" id="fbBoard">
         <div class="fb-title"><span>💬 <span data-zh="滚动留言" data-en="Messages">滚动留言</span></span><button class="fb-collapse" id="fbCollapse" onclick="toggleBoard(false)" title="收起">收起</button></div>
-        <div class="fb-stage" id="fbStage"></div>
+        <div class="fb-stage" id="fbStage"></div><div class="fb-resize-handle" id="fbResizeHandle" aria-hidden="true"></div>
         <div class="fb-list" id="fbList" style="display:none"></div>
       </div>
       <div class="fb-add-wrap"><button class="fb-add" onclick="openMsgBox()">✍️ <span data-zh="我也要留言" data-en="Leave a message">我也要留言</span></button></div>
@@ -604,7 +605,9 @@ setShareHost(shareHost);applyLang();applyTheme();
   }
   function laneTop(lane){
     var stage=document.getElementById('fbStage');
-    var room=Math.max(0,(stage?stage.clientHeight:110)-24);
+    var sample=stage&&stage.querySelector('.fb-dm');
+    var itemHeight=sample?sample.offsetHeight:Math.max(20,parseFloat(getComputedStyle(document.querySelector('.fb-board-wrap')).getPropertyValue('--dm-font-size'))*1.35||24);
+    var room=Math.max(0,(stage?stage.clientHeight:110)-itemHeight);
     return Math.round((room/4)*lane);
   }
   function updateLanePositions(){
@@ -612,16 +615,25 @@ setShareHost(shareHost);applyLang();applyTheme();
     stage.querySelectorAll('.fb-dm[data-lane]').forEach(function(node){node.style.top=laneTop(Number(node.getAttribute('data-lane')))+'px';});
   }
   function initBoardResize(){
-    var wrap=document.querySelector('.fb-board-wrap');if(!wrap)return;
+    var wrap=document.querySelector('.fb-board-wrap'),board=wrap&&wrap.querySelector('.fb-board'),handle=document.getElementById('fbResizeHandle');if(!wrap||!board||!handle)return;
     if(window.innerWidth>640){
-      try{var saved=JSON.parse(localStorage.getItem('sku_board_size')||'null');if(saved&&saved.w&&saved.h){wrap.style.width=saved.w+'px';wrap.style.height=saved.h+'px';}}catch(e){}
+      try{var saved=JSON.parse(localStorage.getItem('sku_board_size_v2')||'null');if(saved&&saved.w&&saved.h){wrap.style.width=saved.w+'px';wrap.style.setProperty('--fb-board-height',saved.h+'px');}}catch(e){}
     }
+    function applyMetrics(save){
+      var w=board.offsetWidth,h=board.offsetHeight,scale=Math.sqrt((w*h)/(350*150));
+      wrap.style.setProperty('--dm-font-size',Math.max(13,Math.min(30,16*scale)).toFixed(1)+'px');
+      updateLanePositions();
+      if(save&&window.innerWidth>640)localStorage.setItem('sku_board_size_v2',JSON.stringify({w:Math.round(w),h:Math.round(h)}));
+    }
+    var drag=null;
+    handle.addEventListener('pointerdown',function(e){if(window.innerWidth<=640)return;e.preventDefault();drag={x:e.clientX,y:e.clientY,w:board.offsetWidth,h:board.offsetHeight};handle.setPointerCapture(e.pointerId);});
+    handle.addEventListener('pointermove',function(e){if(!drag)return;var w=Math.max(280,Math.min(window.innerWidth-80,drag.w+e.clientX-drag.x));var h=Math.max(115,Math.min(window.innerHeight-110,drag.h+e.clientY-drag.y));wrap.style.width=Math.round(w)+'px';wrap.style.setProperty('--fb-board-height',Math.round(h)+'px');applyMetrics(false);});
+    function finishDrag(e){if(!drag)return;drag=null;try{handle.releasePointerCapture(e.pointerId);}catch(err){}applyMetrics(true);}
+    handle.addEventListener('pointerup',finishDrag);handle.addEventListener('pointercancel',finishDrag);
     if(window.ResizeObserver){
-      new ResizeObserver(function(){
-        updateLanePositions();
-        if(window.innerWidth>640)localStorage.setItem('sku_board_size',JSON.stringify({w:Math.round(wrap.offsetWidth),h:Math.round(wrap.offsetHeight)}));
-      }).observe(wrap);
+      new ResizeObserver(function(){applyMetrics(false);}).observe(board);
     }
+    applyMetrics(false);
   }
   function loadMsgs(){
     fetch(DB_URL+'/messages.json')
