@@ -221,6 +221,7 @@ html[data-theme="dark"] .modal textarea,html[data-theme="dark"] .modal input{bac
 }
 .site-btn:hover{color:var(--text)}
 .site-btn.active{background:var(--btn-primary-bg);color:var(--btn-primary-text);border-color:var(--btn-primary-bg);box-shadow:0 4px 14px rgba(0,0,0,.18)}
+.share-switch{display:flex;align-items:center;justify-content:center;gap:8px;margin:14px auto 4px;color:var(--text-sub);font-size:13px}.share-options{display:inline-flex;gap:4px;padding:4px;border-radius:13px;background:var(--glass);border:1px solid var(--glass-border);box-shadow:var(--glass-hi)}.share-btn{border:0;border-radius:9px;padding:7px 13px;background:transparent;color:var(--text-sub);font-weight:700;cursor:pointer;transition:.18s}.share-btn:hover{color:var(--text)}.share-btn.active{background:var(--btn-primary-bg);color:var(--btn-primary-text);box-shadow:0 3px 10px rgba(0,0,0,.16)}
 
 
 /* ===== 底部广告滚动条 ===== */
@@ -300,6 +301,14 @@ html[data-theme="dark"] .fb-open-btn{background:rgba(255,255,255,.12);color:#fff
     <button class="site-btn" data-site="MG" onclick="setSite('MG')">🎨 <span class="lang" data-zh="美工" data-en="Design">美工</span></button>
   </div>
 
+  <div class="share-switch">
+    <span data-zh="共享盘入口" data-en="Shared drive">共享盘入口</span>
+    <div class="share-options" id="shareOptions">
+      <button class="share-btn active" data-host="10.10.10.20" onclick="setShareHost('10.10.10.20')">10.10.10.20</button>
+      <button class="share-btn" data-host="Rbyw" onclick="setShareHost('Rbyw')">Rbyw</button>
+    </div>
+  </div>
+
 
 
   <div class="stats"><span id="count"></span><span id="built"></span></div>
@@ -370,7 +379,7 @@ function showConfirm(msg, onYes){
   m.classList.add('show');
 }
 
-let INDEX=null, lang='zh', siteFilter='all';
+let INDEX=null, lang='zh', siteFilter='all', shareHost=localStorage.getItem('sku_share_host')||'10.10.10.20';
 const el={q:document.getElementById('q'),count:document.getElementById('count'),built:document.getElementById('built'),meta:document.getElementById('meta'),results:document.getElementById('results')};
 el.q.addEventListener('keydown',e=>{if(e.key==='Enter')doSearch();});
 function setQ(v){el.q.value=v;doSearch();}
@@ -379,6 +388,13 @@ function setSite(s){
   var btns=document.querySelectorAll('.site-btn');
   btns.forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-site')===s); });
   if(el.q.value.trim()) doSearch();
+}
+function resolveSharePath(p){return String(p||'').replace(/^\\\\(?:10\.10\.10\.20|Rbyw)(?=\\)/i,'\\\\'+shareHost);}
+function setShareHost(host){
+  shareHost=host==='Rbyw'?'Rbyw':'10.10.10.20';
+  localStorage.setItem('sku_share_host',shareHost);
+  document.querySelectorAll('.share-btn').forEach(function(btn){btn.classList.toggle('active',btn.getAttribute('data-host')===shareHost);});
+  if(INDEX&&el.q.value.trim())doSearch();
 }
 
 function applyLang(){
@@ -416,7 +432,7 @@ function doSearch(){
   el.meta.textContent=(lang==='zh'?'找到 ':'Found ')+data.length+(lang==='zh'?' 条':' results');
   if(!data.length){el.results.innerHTML='<div class="empty">'+(lang==='zh'?'未找到，试试更短的关键词或别的别名':'No results. Try shorter keyword.')+'</div>';return;}
   const dl=lang==='zh'?'目录':'Dir',fl=lang==='zh'?'文件':'File',cl=lang==='zh'?'复制':'Copy',ol=lang==='zh'?'打开':'Open';
-  el.results.innerHTML=data.map(it=>{const isDir=it.type==='dir';return '<div class="item" data-path="'+escAttr(it.path)+'"><div class="name"><span class="tag '+(isDir?'dir':'file')+'">'+(isDir?dl:fl)+'</span>'+esc(it.name)+'</div><div class="path">'+esc(it.path)+'</div><div class="actions"><button class="primary act-copy"><span class="btntext">'+cl+'</span></button><button class="act-open"><span class="btntext">'+ol+'</span></button></div></div>';}).join('');
+  el.results.innerHTML=data.map(it=>{const isDir=it.type==='dir',p=resolveSharePath(it.path);return '<div class="item" data-path="'+escAttr(p)+'"><div class="name"><span class="tag '+(isDir?'dir':'file')+'">'+(isDir?dl:fl)+'</span>'+esc(it.name)+'</div><div class="path">'+esc(p)+'</div><div class="actions"><button class="primary act-copy"><span class="btntext">'+cl+'</span></button><button class="act-open"><span class="btntext">'+ol+'</span></button></div></div>';}).join('');
 }
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function escAttr(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
@@ -526,7 +542,7 @@ window.addEventListener('DOMContentLoaded', function(){
   raf = requestAnimationFrame(update);
 });
 
-applyLang();applyTheme();
+setShareHost(shareHost);applyLang();applyTheme();
 </script>
 
 <!-- 反馈模态 -->
