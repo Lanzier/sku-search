@@ -382,7 +382,7 @@ function showConfirm(msg, onYes){
   m.classList.add('show');
 }
 
-let INDEX=null, lang='zh', siteFilter='all', shareHost=localStorage.getItem('sku_share_host')||'10.10.10.20';
+let INDEX={dirs:[],files:[],builtAt:null}, INDEX_TOTAL=0, INDEX_LOADING=true, lang='zh', siteFilter='all', shareHost=localStorage.getItem('sku_share_host')||'10.10.10.20';
 const el={q:document.getElementById('q'),count:document.getElementById('count'),built:document.getElementById('built'),meta:document.getElementById('meta'),results:document.getElementById('results')};
 el.q.addEventListener('keydown',e=>{if(e.key==='Enter')doSearch();});
 function setQ(v){el.q.value=v;doSearch();}
@@ -406,7 +406,7 @@ function applyLang(){
   document.querySelectorAll('[data-zh]').forEach(e=>{const k=lang==='zh'?'data-zh':'data-en';const v=e.getAttribute(k);if(v!=null&&v!=='')e.textContent=v;});
   document.getElementById('langLabel').textContent=lang==='zh'?'EN':'中文';
   el.q.setAttribute('placeholder',lang==='zh'?'输入 SKU / 编号 / 别名，如 3012 或 RHL1000':'Enter SKU / code / alias, e.g. 3012 or RHL1000');
-  if(INDEX){const t=(INDEX.dirs?INDEX.dirs.length:0)+(INDEX.files?INDEX.files.length:0);el.count.textContent=lang==='zh'?('已收录 '+t+' 条SKU/文件夹'):(t+' SKU items indexed');if(INDEX.builtAt)el.built.textContent=(lang==='zh'?'索引更新于 ':'Updated ')+_builtDate(INDEX.builtAt);}
+  if(INDEX){const t=(INDEX.dirs?INDEX.dirs.length:0)+(INDEX.files?INDEX.files.length:0),suffix=INDEX_LOADING&&INDEX_TOTAL?' / '+INDEX_TOTAL:'';el.count.textContent=lang==='zh'?((INDEX_LOADING?'正在加载 ':'已收录 ')+t+suffix+' 条SKU/文件夹'):((INDEX_LOADING?'Loading ':'Indexed ')+t+suffix+' SKU items');if(INDEX.builtAt)el.built.textContent=(lang==='zh'?'索引更新于 ':'Updated ')+_builtDate(INDEX.builtAt);}
   if(INDEX && el.q && el.q.value && el.q.value.trim()){ try{ doSearch(); }catch(e){} }
 }
 function applyTheme(){
@@ -420,11 +420,35 @@ document.getElementById('themeBtn').addEventListener('click',()=>{const n=(docum
 if(localStorage.getItem('sku_theme'))document.documentElement.setAttribute('data-theme',localStorage.getItem('sku_theme'));
 if(localStorage.getItem('sku_lang'))document.documentElement.setAttribute('data-lang',localStorage.getItem('sku_lang'));
 
-fetch('./index.json').then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}).then(d=>{INDEX=d;applyLang();el.q.focus();}).catch(err=>{INDEX=null;el.count.textContent='⚠️ 索引加载失败';el.meta.textContent='请确认 index.json 已发布。错误: '+err.message;});
+async function fetchIndexJson(url,attempts){
+  var lastError;
+  for(var attempt=1;attempt<=attempts;attempt++){
+    var controller=new AbortController(),timer=setTimeout(function(){controller.abort()},20000);
+    try{var response=await fetch(url+(url.indexOf('?')>=0?'&':'?')+'v='+Date.now(),{cache:'no-store',signal:controller.signal});if(!response.ok)throw new Error('HTTP '+response.status);return await response.json();}
+    catch(error){lastError=error;if(attempt<attempts)await new Promise(function(resolve){setTimeout(resolve,800*attempt)});}
+    finally{clearTimeout(timer);}
+  }
+  throw lastError;
+}
+async function loadIndex(){
+  try{
+    var manifest=await fetchIndexJson('./index-manifest.json',3);INDEX_TOTAL=manifest.total||0;INDEX.builtAt=manifest.builtAt||null;applyLang();
+    var failed=0,chunks=manifest.chunks||[];
+    for(var offset=0;offset<chunks.length;offset+=3){
+      var batch=chunks.slice(offset,offset+3);
+      var results=await Promise.all(batch.map(function(chunk){return fetchIndexJson('./'+chunk.file,3).catch(function(){failed++;return[]})}));
+      results.forEach(function(items){items.forEach(function(item){(item.type==='file'?INDEX.files:INDEX.dirs).push(item)})});
+      applyLang();if(el.q.value.trim())doSearch();
+    }
+    INDEX_LOADING=false;applyLang();el.q.focus();
+    if(failed)el.meta.textContent=lang==='zh'?('部分索引加载失败，已加载 '+INDEX.dirs.length+' 条，可正常搜索'):(INDEX.dirs.length+' items loaded; some chunks failed');
+  }catch(err){INDEX_LOADING=false;applyLang();el.count.textContent=lang==='zh'?'⚠️ 索引加载失败':'⚠️ Index load failed';el.meta.textContent=(lang==='zh'?'网络连接异常，请稍后刷新。错误: ':'Network error. Please refresh. Error: ')+err.message;}
+}
+loadIndex();
 
 function doSearch(){
   const q=el.q.value.trim();
-  if(!INDEX){el.meta.textContent=lang==='zh'?'索引未加载，请稍候':'Index loading…';return;}
+  if(!INDEX.dirs.length&&!INDEX.files.length){el.meta.textContent=lang==='zh'?(INDEX_LOADING?'索引正在加载，请稍候':'索引加载失败，请刷新重试'):(INDEX_LOADING?'Index loading…':'Index failed. Please refresh.');return;}
   if(!q){el.results.innerHTML='';el.meta.textContent='';return;}
   const needle=q.toUpperCase(),all=[];
   (INDEX.dirs||[]).forEach(function(d){ if(siteFilter==='all'||d.site===siteFilter) all.push({name:d.name,path:d.path,type:'dir',site:d.site}); });
