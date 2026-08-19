@@ -423,7 +423,7 @@ if(localStorage.getItem('sku_lang'))document.documentElement.setAttribute('data-
 async function fetchIndexJson(url,attempts){
   var lastError;
   for(var attempt=1;attempt<=attempts;attempt++){
-    var controller=new AbortController(),timer=setTimeout(function(){controller.abort()},20000);
+    var controller=new AbortController(),timer=setTimeout(function(){controller.abort()},60000);
     try{var response=await fetch(url+(url.indexOf('?')>=0?'&':'?')+'v='+Date.now(),{cache:'no-store',signal:controller.signal});if(!response.ok)throw new Error('HTTP '+response.status);return await response.json();}
     catch(error){lastError=error;if(attempt<attempts)await new Promise(function(resolve){setTimeout(resolve,800*attempt)});}
     finally{clearTimeout(timer);}
