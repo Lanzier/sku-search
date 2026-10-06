@@ -422,11 +422,16 @@ if(localStorage.getItem('sku_theme'))document.documentElement.setAttribute('data
 if(localStorage.getItem('sku_lang'))document.documentElement.setAttribute('data-lang',localStorage.getItem('sku_lang'));
 /* INLINE_INDEX_MANIFEST_START */window.__SKU_INDEX_MANIFEST__={"version":4,"builtAt":"2026-10-05T18:28:42.153Z","total":135054,"chunkSize":5000,"chunks":[{"file":"index-chunks/index-001.json","count":5000},{"file":"index-chunks/index-002.json","count":5000},{"file":"index-chunks/index-003.json","count":5000},{"file":"index-chunks/index-004.json","count":5000},{"file":"index-chunks/index-005.json","count":5000},{"file":"index-chunks/index-006.json","count":5000},{"file":"index-chunks/index-007.json","count":5000},{"file":"index-chunks/index-008.json","count":5000},{"file":"index-chunks/index-009.json","count":5000},{"file":"index-chunks/index-010.json","count":5000},{"file":"index-chunks/index-011.json","count":5000},{"file":"index-chunks/index-012.json","count":5000},{"file":"index-chunks/index-013.json","count":5000},{"file":"index-chunks/index-014.json","count":5000},{"file":"index-chunks/index-015.json","count":5000},{"file":"index-chunks/index-016.json","count":5000},{"file":"index-chunks/index-017.json","count":5000},{"file":"index-chunks/index-018.json","count":5000},{"file":"index-chunks/index-019.json","count":5000},{"file":"index-chunks/index-020.json","count":5000},{"file":"index-chunks/index-021.json","count":5000},{"file":"index-chunks/index-022.json","count":5000},{"file":"index-chunks/index-023.json","count":5000},{"file":"index-chunks/index-024.json","count":5000},{"file":"index-chunks/index-025.json","count":5000},{"file":"index-chunks/index-026.json","count":5000},{"file":"index-chunks/index-027.json","count":5000},{"file":"index-chunks/index-028.json","count":54}]};/* INLINE_INDEX_MANIFEST_END */
 
-async function fetchIndexJson(url,attempts){
+async function fetchIndexJson(url,attempts,version){
   var lastError;
   for(var attempt=1;attempt<=attempts;attempt++){
-    var controller=new AbortController(),timer=setTimeout(function(){controller.abort()},60000);
-    try{var response=await fetch(url+(url.indexOf('?')>=0?'&':'?')+'v='+Date.now(),{cache:'no-store',signal:controller.signal});if(!response.ok)throw new Error('HTTP '+response.status);return await response.json();}
+    var controller=new AbortController(),timer=setTimeout(function(){controller.abort()},45000);
+    try{
+      var requestUrl=url+(url.indexOf('?')>=0?'&':'?')+'v='+encodeURIComponent(version||'manifest');
+      var response=await fetch(requestUrl,{cache:'default',signal:controller.signal});
+      if(!response.ok)throw new Error('HTTP '+response.status);
+      return await response.json();
+    }
     catch(error){lastError=error;if(attempt<attempts)await new Promise(function(resolve){setTimeout(resolve,800*attempt)});}
     finally{clearTimeout(timer);}
   }
@@ -435,13 +440,13 @@ async function fetchIndexJson(url,attempts){
 async function loadIndex(){
   try{
     var manifest;
-    try{manifest=await fetchIndexJson('./index-manifest.json',3)}
+    try{manifest=await fetchIndexJson('./index-manifest.json',3,'manifest-v4')}
     catch(manifestError){manifest=window.__SKU_INDEX_MANIFEST__;if(!manifest||!manifest.chunks)throw manifestError;el.meta.textContent=lang==='zh'?'网络波动，正在使用内置索引清单继续加载':'Network retry: using the built-in index manifest';}
     INDEX_TOTAL=manifest.total||0;INDEX.builtAt=manifest.builtAt||null;applyLang();
-    var failed=0,chunks=manifest.chunks||[];
-    for(var offset=0;offset<chunks.length;offset+=3){
-      var batch=chunks.slice(offset,offset+3);
-      var results=await Promise.all(batch.map(function(chunk){return fetchIndexJson('./'+chunk.file,3).catch(function(){failed++;return[]})}));
+    var failed=0,chunks=manifest.chunks||[],indexVersion=manifest.builtAt||manifest.version||'current';
+    for(var offset=0;offset<chunks.length;offset+=8){
+      var batch=chunks.slice(offset,offset+8);
+      var results=await Promise.all(batch.map(function(chunk){return fetchIndexJson('./'+chunk.file,3,indexVersion).catch(function(){failed++;return[]})}));
       results.forEach(function(items){items.forEach(function(item){(item.type==='file'?INDEX.files:INDEX.dirs).push(item)})});
       applyLang();if(el.q.value.trim())doSearch();
     }
