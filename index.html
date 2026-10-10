@@ -222,6 +222,7 @@ html[data-theme="dark"] .modal textarea,html[data-theme="dark"] .modal input{bac
 .site-btn:hover{color:var(--text)}
 .site-btn.active{background:var(--btn-primary-bg);color:var(--btn-primary-text);border-color:var(--btn-primary-bg);box-shadow:0 4px 14px rgba(0,0,0,.18)}
 .share-switch{display:flex;align-items:center;justify-content:center;gap:8px;margin:14px auto 4px;color:var(--text-sub);font-size:13px}.share-options{display:inline-flex;gap:4px;padding:4px;border-radius:13px;background:var(--glass);border:1px solid var(--glass-border);box-shadow:var(--glass-hi)}.share-btn{border:0;border-radius:9px;padding:7px 13px;background:transparent;color:var(--text-sub);font-weight:700;cursor:pointer;transition:.18s}.share-btn:hover{color:var(--text)}.share-btn.active{background:var(--btn-primary-bg);color:var(--btn-primary-text);box-shadow:0 3px 10px rgba(0,0,0,.16)}
+.sort-switch{display:flex;align-items:center;justify-content:center;gap:8px;margin:10px auto 6px;color:var(--text-sub);font-size:13px}.sort-options{display:inline-flex;gap:4px;padding:4px;border-radius:13px;background:var(--glass);border:1px solid var(--glass-border);box-shadow:var(--glass-hi)}.sort-btn{border:0;border-radius:9px;padding:7px 13px;background:transparent;color:var(--text-sub);font-weight:700;cursor:pointer;transition:.18s}.sort-btn:hover{color:var(--text)}.sort-btn.active{background:var(--btn-primary-bg);color:var(--btn-primary-text);box-shadow:0 3px 10px rgba(0,0,0,.16)}.modified-time{color:var(--text-faint);font-size:11.5px}
 
 
 /* ===== 底部广告滚动条 ===== */
@@ -312,6 +313,14 @@ html[data-theme="dark"] .fb-open-btn{background:rgba(255,255,255,.12);color:#fff
       <button class="share-btn" data-host="Rbyw" onclick="setShareHost('Rbyw')">Rbyw</button>
     </div>
   </div>
+  <div class="sort-switch">
+    <span data-zh="结果排序" data-en="Sort results">结果排序</span>
+    <div class="sort-options" id="sortOptions">
+      <button class="sort-btn active" data-sort="relevance" onclick="setSort('relevance')"><span data-zh="相关度" data-en="Relevance">相关度</span></button>
+      <button class="sort-btn" data-sort="newest" onclick="setSort('newest')"><span data-zh="最新修改" data-en="Newest">最新修改</span></button>
+      <button class="sort-btn" data-sort="oldest" onclick="setSort('oldest')"><span data-zh="最早修改" data-en="Oldest">最早修改</span></button>
+    </div>
+  </div>
 
 
 
@@ -383,7 +392,7 @@ function showConfirm(msg, onYes){
   m.classList.add('show');
 }
 
-let INDEX={dirs:[],files:[],builtAt:null}, INDEX_TOTAL=0, INDEX_LOADING=true, lang='zh', siteFilter='all', shareHost=localStorage.getItem('sku_share_host')||'10.10.10.20';
+let INDEX={dirs:[],files:[],builtAt:null}, INDEX_TOTAL=0, INDEX_LOADING=true, lang='zh', siteFilter='all', sortMode=localStorage.getItem('sku_sort_mode')||'relevance', shareHost=localStorage.getItem('sku_share_host')||'10.10.10.20';
 const el={q:document.getElementById('q'),count:document.getElementById('count'),built:document.getElementById('built'),meta:document.getElementById('meta'),results:document.getElementById('results')};
 el.q.addEventListener('keydown',e=>{if(e.key==='Enter')doSearch();});
 function setQ(v){el.q.value=v;doSearch();}
@@ -392,6 +401,12 @@ function setSite(s){
   var btns=document.querySelectorAll('.site-btn');
   btns.forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-site')===s); });
   if(el.q.value.trim()) doSearch();
+}
+function setSort(mode){
+  sortMode=['newest','oldest'].includes(mode)?mode:'relevance';
+  localStorage.setItem('sku_sort_mode',sortMode);
+  document.querySelectorAll('.sort-btn').forEach(function(btn){btn.classList.toggle('active',btn.getAttribute('data-sort')===sortMode);});
+  if(el.q.value.trim())doSearch();
 }
 function resolveSharePath(p){return String(p||'').replace(/^\\\\(?:10\.10\.10\.20|Rbyw)(?=\\)/i,'\\\\'+shareHost);}
 function setShareHost(host){
@@ -420,6 +435,7 @@ document.getElementById('langBtn').addEventListener('click',()=>{const n=(docume
 document.getElementById('themeBtn').addEventListener('click',()=>{const n=(document.documentElement.getAttribute('data-theme')||'light')==='light'?'dark':'light';document.documentElement.setAttribute('data-theme',n);localStorage.setItem('sku_theme',n);applyTheme();});
 if(localStorage.getItem('sku_theme'))document.documentElement.setAttribute('data-theme',localStorage.getItem('sku_theme'));
 if(localStorage.getItem('sku_lang'))document.documentElement.setAttribute('data-lang',localStorage.getItem('sku_lang'));
+setSort(sortMode);
 /* INLINE_INDEX_MANIFEST_START */window.__SKU_INDEX_MANIFEST__={"version":4,"builtAt":"2026-10-09T18:06:59.157Z","total":135892,"chunkSize":5000,"chunks":[{"file":"index-chunks/index-001.json","count":5000},{"file":"index-chunks/index-002.json","count":5000},{"file":"index-chunks/index-003.json","count":5000},{"file":"index-chunks/index-004.json","count":5000},{"file":"index-chunks/index-005.json","count":5000},{"file":"index-chunks/index-006.json","count":5000},{"file":"index-chunks/index-007.json","count":5000},{"file":"index-chunks/index-008.json","count":5000},{"file":"index-chunks/index-009.json","count":5000},{"file":"index-chunks/index-010.json","count":5000},{"file":"index-chunks/index-011.json","count":5000},{"file":"index-chunks/index-012.json","count":5000},{"file":"index-chunks/index-013.json","count":5000},{"file":"index-chunks/index-014.json","count":5000},{"file":"index-chunks/index-015.json","count":5000},{"file":"index-chunks/index-016.json","count":5000},{"file":"index-chunks/index-017.json","count":5000},{"file":"index-chunks/index-018.json","count":5000},{"file":"index-chunks/index-019.json","count":5000},{"file":"index-chunks/index-020.json","count":5000},{"file":"index-chunks/index-021.json","count":5000},{"file":"index-chunks/index-022.json","count":5000},{"file":"index-chunks/index-023.json","count":5000},{"file":"index-chunks/index-024.json","count":5000},{"file":"index-chunks/index-025.json","count":5000},{"file":"index-chunks/index-026.json","count":5000},{"file":"index-chunks/index-027.json","count":5000},{"file":"index-chunks/index-028.json","count":892}]};/* INLINE_INDEX_MANIFEST_END */
 
 async function fetchIndexJson(url,attempts,version){
@@ -461,15 +477,17 @@ function doSearch(){
   if(!INDEX.dirs.length&&!INDEX.files.length){el.meta.textContent=lang==='zh'?(INDEX_LOADING?'索引正在加载，请稍候':'索引加载失败，请刷新重试'):(INDEX_LOADING?'Index loading…':'Index failed. Please refresh.');return;}
   if(!q){el.results.innerHTML='';el.meta.textContent='';return;}
   const needle=q.toUpperCase(),all=[];
-  (INDEX.dirs||[]).forEach(function(d){ if(siteFilter==='all'||d.site===siteFilter) all.push({name:d.name,path:d.path,type:'dir',site:d.site}); });
-  (INDEX.files||[]).forEach(function(f){ if(siteFilter==='all'||f.site===siteFilter) all.push({name:f.name,path:f.path,type:'file',site:f.site}); });
+  (INDEX.dirs||[]).forEach(function(d){ if(siteFilter==='all'||d.site===siteFilter) all.push({name:d.name,path:d.path,type:'dir',site:d.site,modifiedAt:d.modifiedAt||null}); });
+  (INDEX.files||[]).forEach(function(f){ if(siteFilter==='all'||f.site===siteFilter) all.push({name:f.name,path:f.path,type:'file',site:f.site,modifiedAt:f.modifiedAt||null}); });
   const exact=[],prefix=[],contain=[];
   for(const e of all){const n=(e.name||'').toUpperCase();if(n===needle)exact.push(e);else if(n.startsWith(needle))prefix.push(e);else if(n.includes(needle))contain.push(e);}
-  const data=[...exact.slice(0,30),...prefix.slice(0,60),...contain.slice(0,60)];
+  let data;
+  if(sortMode==='relevance')data=[...exact.slice(0,30),...prefix.slice(0,60),...contain.slice(0,60)];
+  else {const direction=sortMode==='newest'?-1:1;data=[...exact,...prefix,...contain].sort(function(a,b){const at=a.modifiedAt?Date.parse(a.modifiedAt):NaN,bt=b.modifiedAt?Date.parse(b.modifiedAt):NaN;if(!Number.isFinite(at)&&!Number.isFinite(bt))return 0;if(!Number.isFinite(at))return 1;if(!Number.isFinite(bt))return -1;return (at-bt)*direction;}).slice(0,150);}
   el.meta.textContent=(lang==='zh'?'找到 ':'Found ')+data.length+(lang==='zh'?' 条':' results');
   if(!data.length){el.results.innerHTML='<div class="empty">'+(lang==='zh'?'未找到，试试更短的关键词或别的别名':'No results. Try shorter keyword.')+'</div>';return;}
   const dl=lang==='zh'?'目录':'Dir',fl=lang==='zh'?'文件':'File',cl=lang==='zh'?'复制':'Copy',ol=lang==='zh'?'打开':'Open';
-  el.results.innerHTML=data.map(it=>{const isDir=it.type==='dir',p=resolveSharePath(it.path);return '<div class="item" data-path="'+escAttr(p)+'"><div class="name"><span class="tag '+(isDir?'dir':'file')+'">'+(isDir?dl:fl)+'</span>'+esc(it.name)+'</div><div class="path">'+esc(p)+'</div><div class="actions"><button class="primary act-copy"><span class="btntext">'+cl+'</span></button><button class="act-open"><span class="btntext">'+ol+'</span></button></div></div>';}).join('');
+  el.results.innerHTML=data.map(it=>{const isDir=it.type==='dir',p=resolveSharePath(it.path),modified=it.modifiedAt?new Date(it.modifiedAt).toLocaleString(lang==='zh'?'zh-CN':'en-US',{hour12:false}):'';return '<div class="item" data-path="'+escAttr(p)+'"><div class="name"><span class="tag '+(isDir?'dir':'file')+'">'+(isDir?dl:fl)+'</span>'+esc(it.name)+'</div><div class="path">'+esc(p)+'</div>'+(modified?'<div class="modified-time">'+(lang==='zh'?'最后修改：':'Modified: ')+esc(modified)+'</div>':'')+'<div class="actions"><button class="primary act-copy"><span class="btntext">'+cl+'</span></button><button class="act-open"><span class="btntext">'+ol+'</span></button></div></div>';}).join('');
 }
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function escAttr(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
