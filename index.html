@@ -477,7 +477,7 @@ loadIndex();
 function trackValidSearch(){
   try{
     if(window.goatcounter&&typeof window.goatcounter.count==='function'){
-      window.goatcounter.count({path:'sku-valid-search',title:'SKU valid search',event:true});
+      window.goatcounter.count({path:'sku-valid-search',title:'SKU valid search',event:true,no_session:true});
     }
   }catch(error){/* Analytics must never interrupt searching. */}
 }
