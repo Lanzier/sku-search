@@ -291,7 +291,7 @@ html[data-theme="dark"] .fb-open-btn{background:rgba(255,255,255,.12);color:#fff
     <div class="search-wrap">
       <div class="searchbox">
         <input id="q" data-zh="输入 SKU / 编号 / 别名，如 3012 或 RHL1000" data-en="Enter SKU / code / alias, e.g. 3012 or RHL1000" placeholder="输入 SKU / 编号 / 别名，如 3012 或 RHL1000" autofocus>
-        <button class="search-btn" onclick="doSearch()"><span data-zh="搜索" data-en="Search">搜索</span></button>
+        <button class="search-btn" onclick="doSearch(true)"><span data-zh="搜索" data-en="Search">搜索</span></button>
       </div>
     </div>
   </div>
@@ -394,8 +394,8 @@ function showConfirm(msg, onYes){
 
 let INDEX={dirs:[],files:[],builtAt:null}, INDEX_TOTAL=0, INDEX_LOADING=true, lang='zh', siteFilter='all', sortMode=localStorage.getItem('sku_sort_mode')||'relevance', shareHost=localStorage.getItem('sku_share_host')||'10.10.10.20';
 const el={q:document.getElementById('q'),count:document.getElementById('count'),built:document.getElementById('built'),meta:document.getElementById('meta'),results:document.getElementById('results')};
-el.q.addEventListener('keydown',e=>{if(e.key==='Enter')doSearch();});
-function setQ(v){el.q.value=v;doSearch();}
+el.q.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.repeat&&!e.isComposing)doSearch(true);});
+function setQ(v){el.q.value=v;doSearch(true);}
 function setSite(s){
   siteFilter=s;
   var btns=document.querySelectorAll('.site-btn');
@@ -472,10 +472,20 @@ async function loadIndex(){
 }
 loadIndex();
 
-function doSearch(){
+// Only explicit, non-empty searches with a loaded index are counted.
+// No keywords or shared-drive paths are sent to analytics.
+function trackValidSearch(){
+  try{
+    if(window.goatcounter&&typeof window.goatcounter.count==='function'){
+      window.goatcounter.count({path:'sku-valid-search',title:'SKU valid search',event:true});
+    }
+  }catch(error){/* Analytics must never interrupt searching. */}
+}
+function doSearch(trackSearch){
   const q=el.q.value.trim();
   if(!INDEX.dirs.length&&!INDEX.files.length){el.meta.textContent=lang==='zh'?(INDEX_LOADING?'索引正在加载，请稍候':'索引加载失败，请刷新重试'):(INDEX_LOADING?'Index loading…':'Index failed. Please refresh.');return;}
   if(!q){el.results.innerHTML='';el.meta.textContent='';return;}
+  if(trackSearch===true)trackValidSearch();
   const needle=q.toUpperCase(),all=[];
   (INDEX.dirs||[]).forEach(function(d){ if(siteFilter==='all'||d.site===siteFilter) all.push({name:d.name,path:d.path,type:'dir',site:d.site,modifiedAt:d.modifiedAt||null}); });
   (INDEX.files||[]).forEach(function(f){ if(siteFilter==='all'||f.site===siteFilter) all.push({name:f.name,path:f.path,type:'file',site:f.site,modifiedAt:f.modifiedAt||null}); });
