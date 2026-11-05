@@ -474,13 +474,33 @@ loadIndex();
 
 // Only explicit, non-empty searches with a loaded index are counted.
 // No keywords or shared-drive paths are sent to analytics.
-function trackValidSearch(){
-  try{
-    if(window.goatcounter&&typeof window.goatcounter.count==='function'){
-      window.goatcounter.count({path:'sku-valid-search',title:'SKU valid search',event:true,no_session:true});
+let pendingSearchEvents=0;
+let searchEventRetryTimer=null;
+let searchEventRetryAttempts=0;
+function flushSearchEvents(){
+  searchEventRetryTimer=null;
+  if(window.goatcounter&&typeof window.goatcounter.count==='function'){
+    while(pendingSearchEvents>0){
+      try{
+        window.goatcounter.count({path:'sku-valid-search',title:'SKU valid search',event:true,no_session:true});
+        pendingSearchEvents--;
+      }catch(error){break;}
     }
-  }catch(error){/* Analytics must never interrupt searching. */}
+  }
+  if(pendingSearchEvents>0&&searchEventRetryAttempts<120){
+    searchEventRetryAttempts++;
+    searchEventRetryTimer=setTimeout(flushSearchEvents,1000);
+  }
 }
+function trackValidSearch(){
+  pendingSearchEvents++;
+  searchEventRetryAttempts=0;
+  if(searchEventRetryTimer===null)flushSearchEvents();
+}
+window.addEventListener('online',function(){
+  searchEventRetryAttempts=0;
+  if(pendingSearchEvents>0&&searchEventRetryTimer===null)flushSearchEvents();
+});
 function doSearch(trackSearch){
   const q=el.q.value.trim();
   if(!INDEX.dirs.length&&!INDEX.files.length){el.meta.textContent=lang==='zh'?(INDEX_LOADING?'索引正在加载，请稍候':'索引加载失败，请刷新重试'):(INDEX_LOADING?'Index loading…':'Index failed. Please refresh.');return;}
